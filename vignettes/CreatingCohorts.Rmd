@@ -1,0 +1,127 @@
+---
+title: "Creating Cohorts"
+always_allow_html: yes
+output:
+  html_document:
+    toc: yes
+    toc_depth: '3'
+    df_print: paged
+  html_vignette:
+    toc: yes
+    toc_depth: 3
+    vignette: >
+      %\VignetteIndexEntry{CreatingCohorts}
+      %\VignetteEngine{knitr::rmarkdown}
+      %\VignetteEncoding{UTF-8}
+  pdf_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Cohort information
+### Viral Sinusitis Cohort parameters
+The following text is an export of ATLAS Version 2.12.2. The bold parts of the text are parameters set in the cohort definition. TreatmentPatterns expects that the cohort exit is set to *continuous observation*.
+
+#### Cohort Entry Events
+People with continuous observation of **365** days before and **1,095** days after event may enter the cohort when observing any of the following:
+
+drug eras of **'[MVK] Viral Sinusistis drugs'**.
+Limit cohort entry events to the **earliest event** per person.
+
+#### Inclusion Criteria
+**1. Viral Sinusitis diagnosis**
+Entry events having at least 1 condition occurrence of '[MVK] Viral Sinusitis diagnosis', allow events outside observation period.
+
+**2. Index year**
+Entry events with the following event criteria: starting after December 31, 1949.
+
+#### Cohort Exit
+The person exits the cohort at the end of **continuous observation**.
+
+#### Cohort Eras
+Entry events will be combined into cohort eras if they are within **0** days of each other.
+
+## CohortGenerator
+```{r dataSettingsVars, eval=FALSE}
+connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+cdmDatabaseSchema <- "main"
+resultSchema <- "main"
+cohortTable <- "cohortTable"
+```
+
+To generate cohorts using CohortGenerator we can follow the instructions specified in the vignette:
+```{r generatingCohorts, eval=FALSE}
+cohortsToCreate <- CohortGenerator::createEmptyCohortDefinitionSet()
+
+# Get json-files included with TreatmentPatterns
+cohortJsonFiles <- list.files(
+  system.file(
+    package = "TreatmentPatterns",
+    "exampleCohorts"
+  ),
+  full.names = TRUE
+)
+
+# add cohort definition per file
+for (i in seq_len(length(cohortJsonFiles))) {
+  cohortJsonFileName <- cohortJsonFiles[i]
+  cohortName <- tools::file_path_sans_ext(basename(cohortJsonFileName))
+  # Here we read in the JSON in order to create the SQL
+  # using [CirceR](https://ohdsi.github.io/CirceR/)
+  # If you have your JSON and SQL stored differenly, you can
+  # modify this to read your JSON/SQL files however you require
+  cohortJson <- readChar(cohortJsonFileName, file.info(
+    cohortJsonFileName
+  )$size)
+
+  cohortExpression <- CirceR::cohortExpressionFromJson(cohortJson)
+
+  cohortSql <- CirceR::buildCohortQuery(
+    cohortExpression,
+    options = CirceR::createGenerateOptions(generateStats = FALSE)
+  )
+  cohortsToCreate <- rbind(
+    cohortsToCreate,
+    data.frame(
+      cohortId = i,
+      cohortName = cohortName,
+      sql = cohortSql,
+      stringsAsFactors = FALSE
+    )
+  )
+}
+```
+
+Now that we have specified our cohorts we can generate them.
+```{r cohortTableNames, eval=FALSE}
+# Create the cohort tables to hold the cohort generation results
+cohortTableNames <- CohortGenerator::getCohortTableNames(
+  cohortTable = cohortTable
+)
+```
+
+Generate our cohortTableNames
+```{r, generateCohorts, eval=FALSE}
+CohortGenerator::createCohortTables(
+  connectionDetails = connectionDetails,
+  cohortDatabaseSchema = resultSchema,
+  cohortTableNames = cohortTableNames
+)
+```
+Finally, we can generate our specified cohorts in Eunomia.
+```{r getCohortsGenerated, eval=FALSE}
+# Generate the cohorts
+cohortsGenerated <- CohortGenerator::generateCohortSet(
+  connectionDetails = connectionDetails,
+  cdmDatabaseSchema = cdmDatabaseSchema,
+  cohortDatabaseSchema = resultSchema,
+  cohortTableNames = cohortTableNames,
+  cohortDefinitionSet = cohortsToCreate
+)
+```
+
+## Capr
+Not yet implemented
