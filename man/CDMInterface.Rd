@@ -15,6 +15,7 @@ Abstract interface to the CDM, using CDMConnector or DatabaseConnector.
 \item \href{#method-CDMInterface-addAge}{\code{CDMInterface$addAge()}}
 \item \href{#method-CDMInterface-addSex}{\code{CDMInterface$addSex()}}
 \item \href{#method-CDMInterface-fetchMetadata}{\code{CDMInterface$fetchMetadata()}}
+\item \href{#method-CDMInterface-destroy}{\code{CDMInterface$destroy()}}
 \item \href{#method-CDMInterface-clone}{\code{CDMInterface$clone()}}
 }
 }
@@ -169,6 +170,19 @@ Andromeda object.}
 }
 \subsection{Returns}{
 (\code{invisible(NULL)})
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-CDMInterface-destroy"></a>}}
+\if{latex}{\out{\hypertarget{method-CDMInterface-destroy}{}}}
+\subsection{Method \code{destroy()}}{
+Destroys instance
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{CDMInterface$destroy()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+(NULL)
 }
 }
 \if{html}{\out{<hr>}}

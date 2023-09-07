@@ -4,6 +4,7 @@
 #'
 #' @template param_treatmentPathways
 #' @template param_outputFile
+#' @template param_returnHTML
 #' @template param_groupCombinations
 #' @template param_minFreq
 #'
@@ -35,6 +36,7 @@
 createSankeyDiagram <- function(
     treatmentPathways,
     outputFile,
+    returnHTML = FALSE,
     groupCombinations = FALSE,
     minFreq = 5) {
   data <- treatmentPathways %>%
@@ -98,11 +100,17 @@ createSankeyDiagram <- function(
     options = list(sankey = "{node: { colors: ['#B5482A'], width: 5}}")
   )
 
-  message(sprintf("Writing Sankey diagram to %s", file.path(outputFile)))
-  writeLines(
-    text = plot$html$chart,
-    con = file.path(outputFile)
-  )
-  return(invisible(NULL))
+  if (returnHTML) {
+    return(plot)
+  } else {
+    message(sprintf("Writing Sankey diagram to %s", file.path(outputFile)))
+    
+    writeLines(
+      text = plot$html$chart,
+      con = file.path(outputFile)
+    )
+    
+    return(invisible(NULL))
+  }
 }
 utils::globalVariables(c(".", "freq", "combination"))

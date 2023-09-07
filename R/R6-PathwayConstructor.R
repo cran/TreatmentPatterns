@@ -21,6 +21,8 @@ PathwayConstructor <- R6::R6Class(
       private$cohorts <- cohorts
       private$cohortTableName <- cohortTableName
       private$cdmInterface <- cdmInterface
+      
+      self$validate()
 
       private$settings$targetCohortIds <- cohorts %>%
         filter(.data$type == "target") %>%
@@ -38,7 +40,6 @@ PathwayConstructor <- R6::R6Class(
         pull() %>%
         paste(collapse = ",")
 
-      self$validate()
       return(invisible(self))
     },
 
@@ -50,49 +51,133 @@ PathwayConstructor <- R6::R6Class(
       private$cdmInterface$validate()
 
       errorMessages <- checkmate::makeAssertCollection()
-      # Assert ncol = 3
-      # Assert col names = cohortId, cohortName, type
-      # Assert col types = int,      chr,        chr
-      # Assert col type one of target, event, exit
-
+      
       checkmate::assertCharacter(
-        x = private$settings$includeTreatments, len = 1, add = errorMessages
+        x = private$settings$includeTreatments,
+        len = 1,
+        add = errorMessages
       )
+      
       checkmate::assertSubset(
-        x = private$settings$includeTreatments, choices = c("startDate", "endDate"), add = errorMessages
+        x = private$settings$includeTreatments,
+        choices = c("startDate", "endDate"),
+        add = errorMessages
       )
+      
       checkmate::assertNumeric(
-        x = private$settings$periodPriorToIndex, len = 1, finite = TRUE, null.ok = FALSE, add = errorMessages
+        x = private$settings$periodPriorToIndex,
+        len = 1,
+        finite = TRUE,
+        null.ok = FALSE,
+        add = errorMessages
       )
+      
       checkmate::assertNumeric(
-        x = private$settings$minEraDuration, lower = 0, finite = TRUE, len = 1, null.ok = FALSE, add = errorMessages
+        x = private$settings$minEraDuration,
+        lower = 0,
+        finite = TRUE,
+        len = 1,
+        null.ok = FALSE,
+        add = errorMessages
       )
+      
       checkmate::assertCharacter(
-        x = private$settings$splitEventCohorts, len = 1, add = errorMessages
+        x = private$settings$splitEventCohorts,
+        len = 1,
+        add = errorMessages
       )
+      
       checkmate::assertNumeric(
-        x = private$settings$splitTime, lower = 0, finite = TRUE, len = 1, null.ok = FALSE, add = errorMessages
+        x = private$settings$splitTime,
+        lower = 0,
+        finite = TRUE,
+        len = 1,
+        null.ok = FALSE,
+        add = errorMessages
       )
+      
       checkmate::assertNumeric(
-        x = private$settings$eraCollapseSize, lower = 0, finite = TRUE, len = 1, null.ok = FALSE, add = errorMessages
+        x = private$settings$eraCollapseSize,
+        lower = 0,
+        finite = TRUE,
+        len = 1,
+        null.ok = FALSE,
+        add = errorMessages
       )
+      
       checkmate::assertNumeric(
-        x = private$settings$combinationWindow, lower = 0, finite = TRUE, len = 1, null.ok = FALSE, add = errorMessages
+        x = private$settings$combinationWindow,
+        lower = 0,
+        finite = TRUE,
+        len = 1,
+        null.ok = FALSE,
+        add = errorMessages
       )
+      
       checkmate::assertNumeric(
-        x = private$settings$minPostCombinationDuration, lower = 0, finite = TRUE, len = 1, null.ok = FALSE, add = errorMessages
+        x = private$settings$minPostCombinationDuration,
+        lower = 0,
+        finite = TRUE,
+        len = 1,
+        null.ok = FALSE,
+        add = errorMessages
       )
+      
       checkmate::assertCharacter(
-        x = private$settings$filterTreatments, len = 1, add = errorMessages
+        x = private$settings$filterTreatments,
+        len = 1,
+        add = errorMessages
       )
+      
       checkmate::assertSubset(
-        x = private$settings$filterTreatments, choices = c("First", "Changes", "All"), add = errorMessages
+        x = private$settings$filterTreatments,
+        choices = c("First", "Changes", "All"),
+        add = errorMessages
       )
+      
       checkmate::assertNumeric(
-        x = private$settings$maxPathLength, lower = 0, upper = 5, finite = TRUE, len = 1, null.ok = FALSE, add = errorMessages
+        x = private$settings$maxPathLength,
+        lower = 0,
+        upper = 5,
+        finite = TRUE,
+        len = 1,
+        null.ok = FALSE,
+        add = errorMessages
       )
+      
       checkmate::assertLogical(
-        x = private$settings$addNoPaths, any.missing = FALSE, len = 1, add = errorMessages
+        x = private$settings$addNoPaths,
+        any.missing = FALSE,
+        len = 1,
+        add = errorMessages
+      )
+      
+      checkmate::assertDataFrame(
+        x = private$cohorts,
+        types = c("integerish", "character", "character"),
+        any.missing = FALSE,
+        all.missing = FALSE,
+        ncols = 3,
+        min.rows = 1,
+        col.names = "named",
+        add = errorMessages
+      )
+      
+      checkmate::assertSubset(
+        x = names(private$cohorts),
+        choices = c("cohortId", "cohortName", "type"),
+        add = errorMessages
+      )
+      
+      checkmate::assertSubset(
+        x = private$cohorts$type,
+        choices = c("event", "target", "exit"),
+        add = errorMessages
+      )
+      
+      checkmate::assertCharacter(
+        x = private$cohortTableName,
+        len = 1, null.ok = FALSE
       )
 
       checkmate::reportAssertions(collection = errorMessages)

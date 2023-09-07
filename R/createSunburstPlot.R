@@ -10,7 +10,7 @@ depth <- function(x, thisdepth = 0) {
   # Assertions
   checkmate::assertTRUE(!is.null(x))
   checkmate::assertNumeric(x = thisdepth, len = 1, lower = 0, null.ok = FALSE)
-
+  
   if (!is.list(x)) {
     return(thisdepth)
   } else {
@@ -32,7 +32,7 @@ stripname <- function(x, name) {
   # Assertions
   checkmate::assertTRUE(!is.null(x))
   checkmate::assertCharacter(x = name, len = 1, null.ok = FALSE)
-
+  
   thisdepth <- depth(x)
   if (thisdepth == 0) {
     return(x)
@@ -53,11 +53,11 @@ stripname <- function(x, name) {
 #' @return root list with added childs
 addChild <- function(j, children, parts, root) {
   switch(j,
-    root[["children"]] <- children,
-    root[["children"]][[parts[1]]][["children"]] <- children,
-    root[["children"]][[parts[1]]][["children"]][[parts[2]]][["children"]] <- children,
-    root[["children"]][[parts[1]]][["children"]][[parts[2]]][["children"]][[parts[3]]][["children"]] <- children,
-    root[["children"]][[parts[1]]][["children"]][[parts[2]]][["children"]][[parts[3]]][["children"]][[parts[4]]][["children"]] <- children
+         root[["children"]] <- children,
+         root[["children"]][[parts[1]]][["children"]] <- children,
+         root[["children"]][[parts[1]]][["children"]][[parts[2]]][["children"]] <- children,
+         root[["children"]][[parts[1]]][["children"]][[parts[2]]][["children"]][[parts[3]]][["children"]] <- children,
+         root[["children"]][[parts[1]]][["children"]][[parts[2]]][["children"]][[parts[3]]][["children"]][[parts[4]]][["children"]] <- children
   )
   return(root)
 }
@@ -72,24 +72,24 @@ buildHierarchy <- function(csv) {
     name = "root",
     children = list()
   )
-
+  
   # Create nested structure of lists
   for (i in seq_len(nrow(csv))) {
     sequence <- csv[i, 1]
     size <- csv[i, 2]
-
+    
     parts <- unlist(stringr::str_split(sequence, pattern = "-"))
-
+    
     currentNode <- root
-
+    
     for (j in seq_len(length(parts))) {
       children <- currentNode[["children"]]
       nodeName <- parts[j]
-
+      
       if (j < length(parts)) {
         # Not yet at the end of the sequence; move down the tree
         foundChild <- FALSE
-
+        
         if (length(children) != 0) {
           for (k in seq_len(length(children))) {
             if (children[[k]]$name == nodeName) {
@@ -99,12 +99,12 @@ buildHierarchy <- function(csv) {
             }
           }
         }
-
+        
         # If we dont already have a child node for this branch, create it
         if (!foundChild) {
           childNode <- list("name" = nodeName, "children" = list())
           children[[nodeName]] <- childNode
-
+          
           # Add to main root
           root <- addChild(j, children, parts, root)
         }
@@ -113,16 +113,16 @@ buildHierarchy <- function(csv) {
         # Reached the end of the sequence; create a leaf node
         childNode <- list("name" = nodeName, "size" = size)
         children[[nodeName]] <- childNode
-
+        
         # Add to main root
         root <- addChild(j, children, parts, root)
       }
     }
   }
-
+  
   # Remove list names
   root <- suppressWarnings(stripname(root, "children"))
-
+  
   # Convert nested list structure to json
   json <- rjson::toJSON(root)
   return(json)
@@ -146,9 +146,9 @@ transformCSVtoJSON <- function(data, outcomes) {
       2^(o - 1)
     }
   )
-
+  
   linking <- data.frame(outcomes, bitwiseNumbers)
-
+  
   # Generate lookup file
   series <- sapply(
     X = seq_len(nrow(linking)),
@@ -159,15 +159,15 @@ transformCSVtoJSON <- function(data, outcomes) {
       )
     }
   )
-
+  
   series <- c(series, '{ "key": "End", "value": "End"}')
   lookup <- paste0("[", paste(series, collapse = ","), "]")
-
+  
   # Order names from longest to shortest to adjust in the right order
   linking <- linking[
     order(-sapply(linking$outcomes, function(x) stringr::str_length(x))),
   ]
-
+  
   # Apply linking
   # Change all outcomes to bitwise number
   updated_path <- sapply(data$path, function(p) {
@@ -178,7 +178,7 @@ transformCSVtoJSON <- function(data, outcomes) {
       vectorize = FALSE
     )
   })
-
+  
   # Sum the bitwise numbers of combinations (indicated by +)
   digitsPlusRegex <- "[[:digit:]]+[+][[:digit:]]+"
   updated_path <- sapply(
@@ -191,14 +191,15 @@ transformCSVtoJSON <- function(data, outcomes) {
       return(p)
     }
   )
-
-  transformed_json <- buildHierarchy(
-    cbind(
-      oath = updated_path,
-      freq = data$freq
-    )
+  transformed_csv <- data.frame(
+    path = updated_path,
+    freq = data$freq,
+    path_length = stringr::str_count(updated_path, "-")
   )
-
+  
+  transformed_csv <- transformed_csv[order(transformed_csv$path_length),]
+  transformed_json <- buildHierarchy(transformed_csv)
+  
   result <- paste0(
     "{ \"data\" : ", transformed_json, ", \"lookup\" : ", lookup, "}"
   )
@@ -219,17 +220,17 @@ createTreatmentPathways <- function(treatmentHistory) {
       pathway = list(.data$event_cohort_name[.data$event_seq]),
       .groups = "drop"
     )
-
+  
   layers <- treatmentPathways %>%
     dplyr::rowwise() %>%
     dplyr::mutate(l = length(.data$pathway)) %>%
     dplyr::select("l") %>%
     max()
-
+  
   treatmentPathways <- treatmentPathways %>%
     dplyr::group_by(.data$index_year, .data$pathway) %>%
     dplyr::summarise(freq = length(.data$person_id), .groups = "drop")
-
+  
   return(treatmentPathways)
 }
 
@@ -241,12 +242,12 @@ createTreatmentPathways <- function(treatmentHistory) {
 #' @return (`data.frame()`)
 prepData <- function(treatmentHistory, year) {
   treatmentPathways <- createTreatmentPathways(treatmentHistory)
-
+  
   dat <- treatmentPathways %>%
     rowwise() %>%
     mutate(path = paste(.data$pathway, collapse = "-")) %>%
     select("index_year", "path", "freq")
-
+  
   if (year == "all") {
     dat <- dat %>%
       group_by(.data$path) %>%
@@ -269,6 +270,7 @@ prepData <- function(treatmentHistory, year) {
 #'
 #' @template param_treatmentPathways
 #' @template param_outputFile
+#' @template param_returnHTML
 #'
 #' @export
 #'
@@ -293,33 +295,54 @@ prepData <- function(treatmentHistory, year) {
 #'   treatmentPatwhays,
 #'   outputFile
 #' )
-createSunburstPlot <- function(treatmentPathways, outputFile) {
+createSunburstPlot <- function(treatmentPathways, outputFile, returnHTML = FALSE) {
   data <- treatmentPathways %>%
     mutate(freq = as.integer(.data$freq)) %>%
     select("path", "freq")
-
+  
   outcomes <- unique(unlist(strsplit(
     data$path,
     split = "-", fixed = TRUE
   )))
-
+  
   # Load CSV file and convert to JSON
   json <- transformCSVtoJSON(
     data = data,
     outcomes = outcomes
   )
-
+  
   # Load template HTML file
   html <- paste(
     readLines(
       system.file(
         package = "TreatmentPatterns",
-        "htmlTemplates", "sunburst_standalone.html"
+        "htmlTemplates", "sunburst_shiny.html"
       )
     ),
     collapse = "\n"
   )
-
+  
+  legend <- paste(
+    readLines(
+      system.file(
+        package = "TreatmentPatterns",
+        "htmlTemplates", "legend.html"
+      )
+    ),
+    collapse = "\n"
+  )
+  
+  legend <- sub("@insert_data", json, legend)
+  legend <- sub(
+    "@name",
+    sprintf(
+      "Strata:\n\nAges: %s\nYears: %s\n",
+      paste(unique(treatmentPathways$age), collapse = ", "),
+      paste(unique(treatmentPathways$index_year), collapse = ", ")
+    ),
+    legend
+  )
+  
   # Replace @insert_data
   html <- sub("@insert_data", json, html)
   html <- sub(
@@ -331,11 +354,15 @@ createSunburstPlot <- function(treatmentPathways, outputFile) {
     ),
     html
   )
-
-  # Save HTML file
-  writeLines(
-    text = html,
-    con = file.path(outputFile)
-  )
-  message(glue::glue("Wrote sunburst plot to {file.path(outputFile)}"))
+  
+  if (returnHTML) {
+    return(list(sunburst = html, legend = legend))
+  } else {
+    message(glue::glue("Writing sunburst plot to {file.path(outputFile)}"))
+    # Save HTML file
+    writeLines(
+      text = html,
+      con = file.path(outputFile)
+    )
+  }
 }

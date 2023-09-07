@@ -141,6 +141,7 @@ computePathways <- function(
     resultSchema = resultSchema,
     cdm = cdm
   )
+  on.exit(cdmInterface$destroy())
 
   pathwayConstructor <- PathwayConstructor$new(
     cohorts = cohorts,
@@ -170,5 +171,7 @@ computePathways <- function(
   andromeda$metadata <- andromeda$metadata %>%
     dplyr::collect() %>%
     dplyr::mutate(execution_end_date = as.character(Sys.Date()))
+  
+  
   return(andromeda)
 }

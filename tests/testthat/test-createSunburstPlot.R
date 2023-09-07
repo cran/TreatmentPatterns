@@ -42,4 +42,13 @@ test_that("minimal", {
   expect_identical(length(res$data$children), 8L)
   expect_identical(length(res$data), 2L)
   expect_identical(length(res$lookup), 9L)
+  
+  # Total freq
+  splitJson <- unlist(stringr::str_split(json, pattern = ","))
+  sizes <- splitJson[grep("size", splitJson)]
+  
+  expectedSumFreq <- sum(dummyData$freq)
+  actualSumFreq <- sum(as.numeric(stringr::str_extract_all(sizes, "\\d+")))
+  
+  expect_equal(expectedSumFreq, actualSumFreq)
 })

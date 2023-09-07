@@ -4,7 +4,7 @@
 \alias{createSunburstPlot}
 \title{createSunburstPlot}
 \usage{
-createSunburstPlot(treatmentPathways, outputFile)
+createSunburstPlot(treatmentPathways, outputFile, returnHTML = FALSE)
 }
 \arguments{
 \item{treatmentPathways}{(\code{data.frame()})\cr
@@ -12,6 +12,13 @@ The contents of the treatmentPathways.csv-file as a data.frame().}
 
 \item{outputFile}{(\code{character(1)})\cr
 Path where the Sankey diagram should be written to.}
+
+\item{returnHTML}{(\code{logical(1)}: \code{FALSE})\cr
+Logical to return HTML or not.
+\describe{
+\item{\code{TRUE}}{Returns HTML as \code{character(n)}, does not requie \code{outputPath} to be specified.}
+\item{\code{FALSE}}{Returns \code{NULL}, but writes the HTML to the specified file instead. Requires \code{outputPath} to be specified.}
+}}
 }
 \value{
 (\code{NULL})

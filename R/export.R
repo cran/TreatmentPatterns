@@ -114,6 +114,14 @@
 #'   }
 #' }
 export <- function(andromeda, outputPath, ageWindow = 10, minFreq = 5, archiveName = NULL) {
+  collection <- checkmate::makeAssertCollection()
+  checkmate::assertTRUE(Andromeda::isAndromeda(andromeda), add = collection)
+  checkmate::assertPathForOutput(outputPath, overwrite = TRUE, add = collection)
+  checkmate::assertIntegerish(ageWindow, min.len = 1, any.missing = FALSE, unique = TRUE, add = collection)
+  checkmate::assertIntegerish(minFreq, len = 1, lower = 1, add = collection)
+  checkmate::assertCharacter(archiveName, len = 1, add = collection, null.ok = TRUE)
+  checkmate::reportAssertions(collection)
+  
   if (!file.exists(outputPath)) {
     dir.create(outputPath)
   }
@@ -263,14 +271,25 @@ computeCounts <- function(treatmentHistory, minFreq) {
 computeTreatmentPathways <- function(treatmentHistory, ageWindow, minFreq) {
   years <- c("all", treatmentHistory$index_year %>% unique())
 
-  treatmentHistory <- treatmentHistory %>%
-    rowwise() %>%
-    dplyr::mutate(
-      age_bin = paste(
-        unlist(stringr::str_extract_all(as.character(cut(.data$age, seq(0, 150, ageWindow))), "\\d+")),
-        collapse = "-"
+  if (length(ageWindow) > 1) {
+    treatmentHistory <- treatmentHistory %>%
+      rowwise() %>%
+      dplyr::mutate(
+        age_bin = paste(
+          unlist(stringr::str_extract_all(as.character(cut(.data$age, ageWindow)), "\\d+")),
+          collapse = "-"
+        )
       )
-    )
+  } else {
+    treatmentHistory <- treatmentHistory %>%
+      rowwise() %>%
+      dplyr::mutate(
+        age_bin = paste(
+          unlist(stringr::str_extract_all(as.character(cut(.data$age, seq(0, 150, ageWindow))), "\\d+")),
+          collapse = "-"
+        )
+      )
+  }
 
   ages <- treatmentHistory$age_bin %>% unique()
 
