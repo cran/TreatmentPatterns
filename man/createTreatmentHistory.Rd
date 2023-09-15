@@ -32,14 +32,14 @@ cohorts are allowed to start}
 \value{
 (\code{data.frame()})\cr
 \enumerate{
-\item (\code{numeric()}) person_id
-\item (\code{numeric()}) index_year
-\item (\code{numeric()}) event_cohort_id
-\item (\code{as.Date()}) event_start_date
-\item (\code{as.Date()}) event_end_date
+\item (\code{numeric()}) personId
+\item (\code{numeric()}) indexYear
+\item (\code{numeric()}) eventCohortId
+\item (\code{as.Date()}) eventStartDate
+\item (\code{as.Date()}) eventEndDate
 \item (\code{character()}) type
-\item (\code{difftime()}) duration_era
-\item (\code{difftime()}) gap_same
+\item (\code{difftime()}) durationEra
+\item (\code{difftime()}) gapSame
 }
 }
 \description{

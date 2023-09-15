@@ -156,7 +156,9 @@ CDMInterface <- R6::R6Class(
 
     ### Methods ----
     finalize = function() {
-      DatabaseConnector::disconnect(private$connection)
+      if (!is.null(private$connection)) {
+        DatabaseConnector::disconnect(private$connection)
+      }
     },
     
     #### DatabaseConnector ----
@@ -165,9 +167,15 @@ CDMInterface <- R6::R6Class(
     dbconFetchCohortTable = function(cohortIds, cohortTableName) {
       renderedSql <- SqlRender::render(
         sql = "
-        SELECT *
-        FROM @resultSchema.@cohortTableName
-        WHERE cohort_definition_id IN (@cohortIds);",
+        SELECT
+          *
+        FROM
+          @resultSchema.@cohortTableName
+        WHERE
+          cohort_definition_id
+        IN
+          (@cohortIds)
+        ;",
         resultSchema = private$resultSchema,
         cohortTableName = cohortTableName,
         cohortIds = cohortIds
@@ -177,22 +185,34 @@ CDMInterface <- R6::R6Class(
         sql = renderedSql,
         targetDialect = private$connection@dbms
       )
-      return(DatabaseConnector::querySql(private$connection, translatedSql))
+      return(
+        DatabaseConnector::querySql(
+          connection = private$connection,
+          sql = translatedSql,
+          snakeCaseToCamelCase = TRUE
+        )
+      )
     },
 
     # andromeda (`Andromeda::andromeda()`)
     dbconAddAge = function(andromeda) {
       personIds <- andromeda$treatmentHistory %>%
-        select("person_id") %>%
+        select("personId") %>%
         pull()
 
       renderedSql <- SqlRender::render(
-        sql = "SELECT
-                 person_id,
-                 year_of_birth
-               FROM @resultSchema.person
-               WHERE person_id IN (@personIds);",
-        resultSchema = private$resultSchema,
+        sql = "
+        SELECT
+          person_id,
+          year_of_birth
+        FROM
+          @cdmSchema.person
+        WHERE
+          person_id
+        IN
+          (@personIds)
+        ;",
+        cdmSchema = private$cdmSchema,
         personIds = personIds
       )
 
@@ -201,13 +221,16 @@ CDMInterface <- R6::R6Class(
         targetDialect = private$connection@dbms
       )
 
-      andromeda$year_of_birth <- DatabaseConnector::querySql(
-        private$connection, translatedSql)
+      andromeda$yearOfBirth <- DatabaseConnector::querySql(
+        connection = private$connection,
+        sql = translatedSql,
+        snakeCaseToCamelCase = TRUE
+      )
 
       andromeda$treatmentHistory <- andromeda$treatmentHistory %>%
-        dplyr::inner_join(andromeda$year_of_birth, by = dplyr::join_by(person_id == PERSON_ID)) %>%
-        dplyr::mutate(age = .data$index_year - .data$YEAR_OF_BIRTH) %>%
-        dplyr::select(-"YEAR_OF_BIRTH")
+        dplyr::inner_join(andromeda$yearOfBirth, by = dplyr::join_by(personId == personId)) %>%
+        dplyr::mutate(age = .data$indexYear - .data$yearOfBirth) %>%
+        dplyr::select(-"yearOfBirth")
 
       return(invisible(NULL))
     },
@@ -215,18 +238,26 @@ CDMInterface <- R6::R6Class(
     # andromeda (`Andromeda::andromeda()`)
     dbconAddSex = function(andromeda) {
       personIds <- andromeda$treatmentHistory %>%
-        select("person_id") %>%
+        select("personId") %>%
         pull()
 
       renderedSql <- SqlRender::render(
-        sql = "SELECT
-                 person_id,
-                 concept_name AS sex
-               FROM @resultSchema.person
-               INNER JOIN @resultSchema.concept
-               ON person.gender_concept_id = concept.concept_id
-               WHERE person_id IN (@personIds);",
-        resultSchema = private$resultSchema,
+        sql = "
+        SELECT
+          person_id,
+          concept_name AS sex
+        FROM
+          @cdmSchema.person
+        INNER JOIN
+          @cdmSchema.concept
+        ON
+          person.gender_concept_id = concept.concept_id
+        WHERE
+          person_id
+        IN
+          (@personIds)
+        ;",
+        cdmSchema = private$cdmSchema,
         personIds = personIds
       )
 
@@ -236,11 +267,13 @@ CDMInterface <- R6::R6Class(
       )
 
       andromeda$sex <- DatabaseConnector::querySql(
-        private$connection, translatedSql)
+        connection = private$connection,
+        sql = translatedSql,
+        snakeCaseToCamelCase = TRUE
+      )
 
       andromeda$treatmentHistory <- andromeda$treatmentHistory %>%
-        dplyr::inner_join(andromeda$sex, by = dplyr::join_by(person_id == PERSON_ID)) %>%
-        dplyr::rename(sex = "SEX")
+        dplyr::inner_join(andromeda$sex, by = dplyr::join_by(personId == personId))
 
       return(invisible(NULL))
     },
@@ -252,7 +285,9 @@ CDMInterface <- R6::R6Class(
           cdm_source_abbreviation,
           cdm_release_date,
           vocabulary_version
-        FROM @cdmSchema.cdm_source;",
+        FROM
+          @cdmSchema.cdm_source
+      ;",
         cdmSchema = private$cdmSchema
       )
 
@@ -262,11 +297,13 @@ CDMInterface <- R6::R6Class(
       )
 
       andromeda$metadata <- DatabaseConnector::querySql(
-        private$connection, translatedSql) %>%
+        connection = private$connection,
+        sql = translatedSql,
+        snakeCaseToCamelCase = TRUE) %>%
         dplyr::mutate(
-          execution_start_date = as.character(Sys.Date()),
-          package_version = as.character(utils::packageVersion("TreatmentPatterns")),
-          r_version = base::version$version.string,
+          executionStartDate = as.character(Sys.Date()),
+          packageVersion = as.character(utils::packageVersion("TreatmentPatterns")),
+          rVersion = base::version$version.string,
           platform = base::version$platform
         )
     },
@@ -276,24 +313,28 @@ CDMInterface <- R6::R6Class(
     cdmconFetchCohortTable = function(cohortIds, cohortTableName) {
       return(
         private$cdm[[cohortTableName]] %>%
-          dplyr::filter(.data$cohort_definition_id %in% cohortIds)
-      ) %>%
-        dplyr::collect()
+          dplyr::filter(.data$cohort_definition_id %in% cohortIds) %>%
+          dplyr::collect() %>%
+          SqlRender::snakeCaseToCamelCaseNames()
+      )
     },
 
     # andromeda (`Andromeda::andromeda()`)
     cdmconAddAge = function(andromeda) {
       personIds <- andromeda$treatmentHistory %>%
-        dplyr::select("person_id") %>%
+        dplyr::select("personId") %>%
         dplyr::pull()
 
-      andromeda$year_of_birth <- private$cdm$person %>%
+      andromeda$yearOfBirth <- private$cdm$person %>%
         dplyr::select("person_id", "year_of_birth")
-
+      
+      andromeda$yearOfBirth <- andromeda$yearOfBirth %>%
+        SqlRender::snakeCaseToCamelCaseNames()
+      
       andromeda$treatmentHistory <- andromeda$treatmentHistory %>%
-        dplyr::inner_join(andromeda$year_of_birth, by = dplyr::join_by(person_id == person_id)) %>%
-        dplyr::mutate(age = .data$index_year - .data$year_of_birth) %>%
-        dplyr::select(-"year_of_birth")
+        dplyr::inner_join(andromeda$yearOfBirth, by = dplyr::join_by(personId == personId)) %>%
+        dplyr::mutate(age = .data$indexYear - .data$yearOfBirth) %>%
+        dplyr::select(-"yearOfBirth")
 
       return(invisible(NULL))
     },
@@ -302,19 +343,20 @@ CDMInterface <- R6::R6Class(
     cdmconAddSex = function(andromeda) {
       # message("Not yet implemented")
       personIds <- andromeda$treatmentHistory %>%
-        select("person_id") %>%
+        select("personId") %>%
         pull()
       # personIds <- c(1,2,3,4)
 
       andromeda$sex <- private$cdm$person %>%
         dplyr::filter(.data$person_id %in% personIds) %>%
         dplyr::inner_join(private$cdm$concept, by = join_by(gender_concept_id == concept_id)) %>%
-        dplyr::select(person_id, concept_name) %>%
-        dplyr::collect()
+        dplyr::select("person_id", "concept_name") %>%
+        dplyr::collect() %>%
+        SqlRender::snakeCaseToCamelCaseNames()
 
       andromeda$treatmentHistory <- andromeda$treatmentHistory %>%
-        dplyr::inner_join(andromeda$sex, by = join_by(person_id == person_id)) %>%
-        dplyr::rename(sex = "concept_name")
+        dplyr::inner_join(andromeda$sex, by = join_by(personId == personId)) %>%
+        dplyr::rename(sex = "conceptName")
 
       return(invisible(NULL))
     },
@@ -329,10 +371,11 @@ CDMInterface <- R6::R6Class(
           "vocabulary_version"
         ) %>%
         dplyr::collect() %>%
+        SqlRender::snakeCaseToCamelCaseNames() %>%
         dplyr::mutate(
-          execution_start_date = as.character(Sys.Date()),
-          package_version = as.character(utils::packageVersion("TreatmentPatterns")),
-          r_version = base::version$version.string,
+          executionStartDate = as.character(Sys.Date()),
+          packageVersion = as.character(utils::packageVersion("TreatmentPatterns")),
+          rVersion = base::version$version.string,
           platform = base::version$platform
         )
       return(invisible(NULL))

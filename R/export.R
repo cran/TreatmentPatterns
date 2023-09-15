@@ -141,11 +141,11 @@ export <- function(andromeda, outputPath, ageWindow = 10, minFreq = 5, archiveNa
   treatmentPathways <- computeTreatmentPathways(treatmentHistory, ageWindow, minFreq)
 
   nTotal <- andromeda$currentCohorts %>%
-    dplyr::summarise(n = dplyr::n_distinct(.data$person_id)) %>%
+    dplyr::summarise(n = dplyr::n_distinct(.data$personId)) %>%
     dplyr::pull()
 
   nTreated <- treatmentHistory %>%
-    dplyr::summarise(n = dplyr::n_distinct(.data$person_id)) %>%
+    dplyr::summarise(n = dplyr::n_distinct(.data$personId)) %>%
     dplyr::pull()
 
   treatmentPathways <- treatmentPathways %>%
@@ -154,7 +154,7 @@ export <- function(andromeda, outputPath, ageWindow = 10, minFreq = 5, archiveNa
       freq = nTotal - nTreated,
       sex = "all",
       age = "all",
-      index_year = "all"
+      indexYear = "all"
     ))
 
   write.csv(treatmentPathways, file = treatmentPathwaysPath, row.names = FALSE)
@@ -204,16 +204,16 @@ export <- function(andromeda, outputPath, ageWindow = 10, minFreq = 5, archiveNa
 computeStatsTherapy <- function(treatmentHistory) {
   stats <- treatmentHistory %>%
     mutate(treatmentType = dplyr::case_when(
-      nchar(.data$event_cohort_id) > 1 ~ "combination",
+      nchar(.data$eventCohortId) > 1 ~ "combination",
       .default = "monotherapy"
     )) %>%
     group_by(.data$treatmentType) %>%
     summarise(
-      avgDuration = mean(.data$duration_era),
-      medianDuration = stats::median(.data$duration_era),
-      sd = stats::sd(.data$duration_era),
-      min = min(.data$duration_era),
-      max = max(.data$duration_era),
+      avgDuration = mean(.data$durationEra),
+      medianDuration = stats::median(.data$durationEra),
+      sd = stats::sd(.data$durationEra),
+      min = min(.data$durationEra),
+      max = max(.data$durationEra),
       count = n()
     )
 
@@ -229,11 +229,11 @@ computeStatsTherapy <- function(treatmentHistory) {
 computeCounts <- function(treatmentHistory, minFreq) {
   # n per Year
   countYear <- treatmentHistory %>%
-    dplyr::group_by(.data$index_year) %>%
+    dplyr::group_by(.data$indexYear) %>%
     dplyr::count() %>%
     dplyr::ungroup() %>%
     dplyr::mutate(n = case_when(
-      .data$n < minFreq ~ glue::glue("<{minFreq}"),
+      .data$n < minFreq ~ sprintf("<%s", minFreq),
       .default = as.character(.data$n)
     ))
 
@@ -243,7 +243,7 @@ computeCounts <- function(treatmentHistory, minFreq) {
     dplyr::count() %>%
     dplyr::ungroup() %>%
     dplyr::mutate(n = case_when(
-      .data$n < minFreq ~ glue::glue("<{minFreq}"),
+      .data$n < minFreq ~ sprintf("<%s", minFreq),
       .default = as.character(.data$n)
     ))
 
@@ -253,7 +253,7 @@ computeCounts <- function(treatmentHistory, minFreq) {
     dplyr::count() %>%
     dplyr::ungroup() %>%
     dplyr::mutate(n = case_when(
-      .data$n < minFreq ~ glue::glue("<{minFreq}"),
+      .data$n < minFreq ~ sprintf("<%s", minFreq),
       .default = as.character(.data$n)
     ))
 
@@ -269,13 +269,13 @@ computeCounts <- function(treatmentHistory, minFreq) {
 #'
 #' @return (`data.frame()`)
 computeTreatmentPathways <- function(treatmentHistory, ageWindow, minFreq) {
-  years <- c("all", treatmentHistory$index_year %>% unique())
+  years <- c("all", treatmentHistory$indexYear %>% unique())
 
   if (length(ageWindow) > 1) {
     treatmentHistory <- treatmentHistory %>%
       rowwise() %>%
       dplyr::mutate(
-        age_bin = paste(
+        ageBin = paste(
           unlist(stringr::str_extract_all(as.character(cut(.data$age, ageWindow)), "\\d+")),
           collapse = "-"
         )
@@ -284,20 +284,20 @@ computeTreatmentPathways <- function(treatmentHistory, ageWindow, minFreq) {
     treatmentHistory <- treatmentHistory %>%
       rowwise() %>%
       dplyr::mutate(
-        age_bin = paste(
+        ageBin = paste(
           unlist(stringr::str_extract_all(as.character(cut(.data$age, seq(0, 150, ageWindow))), "\\d+")),
           collapse = "-"
         )
       )
   }
 
-  ages <- treatmentHistory$age_bin %>% unique()
+  ages <- treatmentHistory$ageBin %>% unique()
 
   # Per year
   treatmentPathways <- stratisfy(treatmentHistory, years, ages)
 
   treatmentPathways <- treatmentPathways %>%
-    mutate(index_year = as.character(.data$index_year))
+    mutate(indexYear = as.character(.data$indexYear))
 
   treatmentPathways[is.na(treatmentPathways)] <- "all"
 
@@ -335,7 +335,7 @@ stratisfy <- function(treatmentHistory, years, ages) {
 
     age <- dplyr::bind_rows(lapply(ages, function(ageRange) {
       treatmentHistory %>%
-        filter(.data$age_bin == ageRange) %>%
+        filter(.data$ageBin == ageRange) %>%
         prepData(y) %>%
         mutate(age = ageRange)
     }))

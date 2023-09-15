@@ -215,9 +215,9 @@ transformCSVtoJSON <- function(data, outcomes) {
 #' @return (`data.frame()`)
 createTreatmentPathways <- function(treatmentHistory) {
   treatmentPathways <- treatmentHistory %>%
-    dplyr::group_by(.data$person_id, .data$index_year) %>%
+    dplyr::group_by(.data$personId, .data$indexYear) %>%
     dplyr::summarise(
-      pathway = list(.data$event_cohort_name[.data$event_seq]),
+      pathway = list(.data$eventCohortName[.data$eventSeq]),
       .groups = "drop"
     )
   
@@ -228,8 +228,8 @@ createTreatmentPathways <- function(treatmentHistory) {
     max()
   
   treatmentPathways <- treatmentPathways %>%
-    dplyr::group_by(.data$index_year, .data$pathway) %>%
-    dplyr::summarise(freq = length(.data$person_id), .groups = "drop")
+    dplyr::group_by(.data$indexYear, .data$pathway) %>%
+    dplyr::summarise(freq = length(.data$personId), .groups = "drop")
   
   return(treatmentPathways)
 }
@@ -246,7 +246,7 @@ prepData <- function(treatmentHistory, year) {
   dat <- treatmentPathways %>%
     rowwise() %>%
     mutate(path = paste(.data$pathway, collapse = "-")) %>%
-    select("index_year", "path", "freq")
+    select("indexYear", "path", "freq")
   
   if (year == "all") {
     dat <- dat %>%
@@ -254,13 +254,88 @@ prepData <- function(treatmentHistory, year) {
       summarise(freq = sum(.data$freq))
   } else {
     dat <- dat %>%
-      filter(.data$index_year == year)
+      filter(.data$indexYear == year)
     if (nrow(dat) == 0) {
       NULL
       # message(sprintf("Not enough data for year: %s", year))
     }
   }
   return(dat)
+}
+
+#' toList
+#'
+#' @param json (`character(1)`)
+#'
+#' @return (`list()`)
+toList <- function(json) {
+  # Load template HTML file
+  html <- paste(
+    readLines(
+      system.file(
+        package = "TreatmentPatterns",
+        "htmlTemplates", "sunburst_shiny.html"
+      )
+    ),
+    collapse = "\n"
+  )
+  
+  legend <- paste(
+    readLines(
+      system.file(
+        package = "TreatmentPatterns",
+        "htmlTemplates", "legend.html"
+      )
+    ),
+    collapse = "\n"
+  )
+  
+  legend <- sub("@insert_data", json, legend)
+  
+  # Replace @insert_data
+  html <- sub("@insert_data", json, html)
+  
+  list(sunburst = html, legend = legend)
+}
+
+#' toFile
+#'
+#' @param json (`character(1)`)
+#' @param treatmentPathways (`data.frame()`)
+#' @param outputFile (`character(1)`)
+#'
+#' @return (`NULL`)
+toFile <- function(json, treatmentPathways, outputFile) {
+  # Load template HTML file
+  html <- paste(
+    readLines(
+      system.file(
+        package = "TreatmentPatterns",
+        "htmlTemplates", "sunburst_standalone.html"
+      )
+    ),
+    collapse = "\n"
+  )
+  
+  # Replace @insert_data
+  html <- sub("@insert_data", json, html)
+  html <- sub(
+    "@name",
+    sprintf(
+      "Strata:\n\nAges: %s\nSex: %s\nYears: %s\n",
+      paste(unique(treatmentPathways$age), collapse = ", "),
+      paste(unique(treatmentPathways$sex), collapse = ", "),
+      paste(unique(treatmentPathways$indexYear), collapse = ", ")
+    ),
+    html
+  )
+  
+  message(glue::glue("Writing sunburst plot to {file.path(outputFile)}"))
+  # Save HTML file
+  writeLines(
+    text = html,
+    con = file.path(outputFile)
+  )
 }
 
 
@@ -311,58 +386,9 @@ createSunburstPlot <- function(treatmentPathways, outputFile, returnHTML = FALSE
     outcomes = outcomes
   )
   
-  # Load template HTML file
-  html <- paste(
-    readLines(
-      system.file(
-        package = "TreatmentPatterns",
-        "htmlTemplates", "sunburst_shiny.html"
-      )
-    ),
-    collapse = "\n"
-  )
-  
-  legend <- paste(
-    readLines(
-      system.file(
-        package = "TreatmentPatterns",
-        "htmlTemplates", "legend.html"
-      )
-    ),
-    collapse = "\n"
-  )
-  
-  legend <- sub("@insert_data", json, legend)
-  legend <- sub(
-    "@name",
-    sprintf(
-      "Strata:\n\nAges: %s\nYears: %s\n",
-      paste(unique(treatmentPathways$age), collapse = ", "),
-      paste(unique(treatmentPathways$index_year), collapse = ", ")
-    ),
-    legend
-  )
-  
-  # Replace @insert_data
-  html <- sub("@insert_data", json, html)
-  html <- sub(
-    "@name",
-    sprintf(
-      "Strata:\n\nAges: %s\nYears: %s\n",
-      paste(unique(treatmentPathways$age), collapse = ", "),
-      paste(unique(treatmentPathways$index_year), collapse = ", ")
-    ),
-    html
-  )
-  
   if (returnHTML) {
-    return(list(sunburst = html, legend = legend))
+    return(toList(json))
   } else {
-    message(glue::glue("Writing sunburst plot to {file.path(outputFile)}"))
-    # Save HTML file
-    writeLines(
-      text = html,
-      con = file.path(outputFile)
-    )
+    toFile(json, treatmentPathways, outputFile)
   }
 }

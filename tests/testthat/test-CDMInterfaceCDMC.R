@@ -34,11 +34,11 @@ if (ableToRun()) {
     metadata <- andromCDMC$metadata %>% collect()
 
     expect_in(
-      c("cdm_source_name", "cdm_source_abbreviation", "cdm_release_date", "vocabulary_version"),
+      c("cdmSourceName", "cdmSourceAbbreviation", "cdmReleaseDate", "vocabularyVersion"),
       names(metadata)
     )
 
-    expect_identical(metadata$r_version, base::version$version.string)
+    expect_identical(metadata$rVersion, base::version$version.string)
     expect_identical(metadata$platform, base::version$platform)
     expect_identical(nrow(metadata), 1L)
     expect_identical(ncol(metadata), 8L)
@@ -60,26 +60,26 @@ if (ableToRun()) {
     expect_in(c("MALE", "FEMALE"), TH$sex)
 
     sexes <- TH %>%
-      inner_join(sex, by = join_by(person_id == person_id)) %>%
-      select("sex", "concept_name")
+      inner_join(sex, by = join_by(personId == personId)) %>%
+      select("sex", "conceptName")
 
-    expect_identical(sexes$sex, sexes$concept_name)
+    expect_identical(sexes$sex, sexes$conceptName)
   })
 
   test_that("Method: addAge", {
     testthat::skip_on_ci()
     cdmInterface$addAge(andromCDMC)
 
-    year_of_birth <- andromCDMC$year_of_birth %>% collect()
+    yearOfBirth <- andromCDMC$yearOfBirth %>% collect()
     TH <- andromCDMC$treatmentHistory %>% collect()
 
-    expect_identical(ncol(year_of_birth), 2L)
+    expect_identical(ncol(yearOfBirth), 2L)
     # All people are included besides subset, probably not a problem.
     # expect_identical(nrow(year_of_birth), 512L)
 
     ages <- TH %>%
-      inner_join(year_of_birth, by = join_by(person_id == person_id)) %>%
-      mutate(ageCheck = .data$index_year - .data$year_of_birth) %>%
+      inner_join(yearOfBirth, by = join_by(personId == personId)) %>%
+      mutate(ageCheck = .data$indexYear - .data$yearOfBirth) %>%
       select("age", "ageCheck")
 
     expect_identical(

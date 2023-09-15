@@ -35,11 +35,11 @@ if (ableToRun()) {
     metadata <- andromDBC$metadata %>% collect()
 
     expect_in(
-      c("CDM_SOURCE_NAME", "CDM_SOURCE_ABBREVIATION", "CDM_RELEASE_DATE", "VOCABULARY_VERSION"),
+      c("cdmSourceName", "cdmSourceAbbreviation", "cdmReleaseDate", "vocabularyVersion"),
       names(metadata)
     )
 
-    expect_identical(metadata$r_version, base::version$version.string)
+    expect_identical(metadata$rVersion, base::version$version.string)
     expect_identical(metadata$platform, base::version$platform)
     expect_identical(nrow(metadata), 1L)
     expect_identical(ncol(metadata), 8L)
@@ -61,25 +61,25 @@ if (ableToRun()) {
     expect_in(c("MALE", "FEMALE"), TH$sex)
 
     sexes <- TH %>%
-      inner_join(sex, by = join_by(person_id == PERSON_ID)) %>%
-      select("sex", "SEX")
+      inner_join(sex, by = join_by(personId == personId)) %>%
+      select("sex.x", "sex.y")
 
-    expect_identical(sexes$sex, sexes$SEX)
+    expect_identical(sexes$sex.x, sexes$sex.y)
   })
 
   test_that("Method: addAge", {
     skip_on_ci()
     cdmInterface$addAge(andromDBC)
 
-    year_of_birth <- andromDBC$year_of_birth %>% collect()
+    yearOfBirth <- andromDBC$yearOfBirth %>% collect()
     TH <- andromDBC$treatmentHistory %>% collect()
 
-    expect_identical(ncol(year_of_birth), 2L)
-    expect_identical(nrow(year_of_birth), 512L)
+    expect_identical(ncol(yearOfBirth), 2L)
+    expect_identical(nrow(yearOfBirth), 512L)
 
     ages <- TH %>%
-      inner_join(year_of_birth, by = join_by(person_id == PERSON_ID)) %>%
-      mutate(ageCheck = .data$index_year - .data$YEAR_OF_BIRTH) %>%
+      inner_join(yearOfBirth, by = join_by(personId == personId)) %>%
+      mutate(ageCheck = .data$indexYear - .data$yearOfBirth) %>%
       select("age", "ageCheck")
 
     expect_identical(

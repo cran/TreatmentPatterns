@@ -192,18 +192,17 @@ PathwayConstructor <- R6::R6Class(
       private$andromeda <- Andromeda::andromeda()
       private$cdmInterface$fetchMetadata(private$andromeda)
 
-      private$andromeda$fullCohorts <- private$cdmInterface$fetchCohortTable(
+      private$andromeda$cohortTable <- private$cdmInterface$fetchCohortTable(
         cohortIds = private$cohorts$cohortId,
         cohortTableName = private$cohortTableName
       )
-
-      private$andromeda$fullCohorts <- private$andromeda$fullCohorts %>%
-        dplyr::rename_with(toupper) %>%
+      
+      private$andromeda$cohortTable <- private$andromeda$cohortTable %>%
         dplyr::rename(
-          cohort_id = "COHORT_DEFINITION_ID",
-          person_id = "SUBJECT_ID",
-          start_date = "COHORT_START_DATE",
-          end_date = "COHORT_END_DATE"
+          cohortId = "cohortDefinitionId",
+          personId = "subjectId",
+          startDate = "cohortStartDate",
+          endDate = "cohortEndDate"
         )
 
       private$andromeda <- constructPathways(
