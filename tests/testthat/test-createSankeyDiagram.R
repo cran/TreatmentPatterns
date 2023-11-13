@@ -42,15 +42,15 @@ test_that("default depth: 2", {
   expect_true(
     all(
       # 4  A-B   12
-      all(unlist(json[1]) == c("1. A", "2. B", "12")),
+      all(unlist(json[1]) == c("1.A", "2.B", "12")),
       # 1    A   25
-      all(unlist(json[2]) == c("1. A+Z", "2. Stopped", "25")),
+      all(unlist(json[2]) == c("1.A+Z", "2.Stopped", "25")),
       # 5  B-C   13
-      all(unlist(json[3]) == c("1. B", "2. C", "13")),
+      all(unlist(json[3]) == c("1.B", "2.C", "13")),
       # 2    B   25
-      all(unlist(json[4]) == c("1. B", "2. Stopped", "25")),
+      all(unlist(json[4]) == c("1.B", "2.Stopped", "25")),
       # 3    C   25
-      all(unlist(json[5]) == c("1. C", "2. Stopped", "25"))
+      all(unlist(json[5]) == c("1.C", "2.Stopped", "25"))
     )
   )
 })
@@ -69,17 +69,17 @@ test_that("default depth: 3", {
   expect_true(
     all(
       # Layer 1 -> 2
-      all(unlist(json[1]) == c("1. D", "2. E", "6.5")),
-      all(unlist(json[2]) == c("1. D", "2. E", "6")),
-      all(unlist(json[3]) == c("1. D+Z", "2. Stopped", "12.5")),
-      all(unlist(json[4]) == c("1. E", "2. Stopped", "12.5")),
-      all(unlist(json[5]) == c("1. F", "2. Stopped", "12.5")),
+      all(unlist(json[1]) == c("1.D", "2.E", "6.5")),
+      all(unlist(json[2]) == c("1.D", "2.E", "6")),
+      all(unlist(json[3]) == c("1.D+Z", "2.Stopped", "12.5")),
+      all(unlist(json[4]) == c("1.E", "2.Stopped", "12.5")),
+      all(unlist(json[5]) == c("1.F", "2.Stopped", "12.5")),
       # Layer 2 -> 3
-      all(unlist(json[6]) == c("2. E", "3. F", "6.5")),
-      all(unlist(json[7]) == c("2. E", "3. Stopped", "6")),
-      all(unlist(json[8]) == c("2. Stopped", "3. Stopped", "12.5")),
-      all(unlist(json[9]) == c("2. Stopped", "3. Stopped", "12.5")),
-      all(unlist(json[10]) == c("2. Stopped", "3. Stopped", "12.5"))
+      all(unlist(json[6]) == c("2.E", "3.F", "6.5")),
+      all(unlist(json[7]) == c("2.E", "3.Stopped", "6")),
+      all(unlist(json[8]) == c("2.Stopped", "3.Stopped", "12.5")),
+      all(unlist(json[9]) == c("2.Stopped", "3.Stopped", "12.5")),
+      all(unlist(json[10]) == c("2.Stopped", "3.Stopped", "12.5"))
     )
   )
 })
@@ -118,5 +118,5 @@ test_that("groupCombinations: TRUE", {
 
   json <- fetchJson(tempFile)
 
-  expect_true(all(unlist(json[2]) == c("1. Combination", "2. Stopped", "25")))
+  expect_true(all(unlist(json[5]) == c("1.Combination", "2.Stopped", "25")))
 })

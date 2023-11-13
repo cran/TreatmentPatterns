@@ -1,12 +1,23 @@
+# TreatmentPatterns 2.6.0
+----------
+* Added `createSunburstPlot2()` as a replacement of `createSunburstPlot()`. `createSunburstPlot2()` will fully replace `createSunburstPlot()` in a future version.
+* Moved `DatabaseConnector` and `SqlRender` to Suggests
+* Removed obsolete dependencies: `data.table`, `fs`, and `glue`.
+* Internal performance updates.
+* Internal code style updates.
+* Moved basic filtering when fetching cohort table.
+* Updated ReadMe with functionalities
+* Internal updates to LRFS paths, to allow paths of identical duration.
+
 # TreatmentPatterns 2.5.2
-==========
+----------
 * Resolved issue with finalize method of CDMInterface class.
 * Resolved issue with schema references.
 * Unified case style.
 * Refactored code for `createSunburstPlot()`.
 
 # TreatmentPatterns 2.5.1
-==========
+----------
 * Added checks for user input: `cohorts` and `cohortTableName`.
 * Added option to directly return HTML when using `createSankeyDiagram`.
 * Added option to directly return HTML when using `createSunburstPlot`.
@@ -16,7 +27,7 @@
 * Resolved issue in `createSunburstPlot`, when converting from data.table to nested JSON.
 
 # TreatmentPatterns 2.5.0
-==========
+----------
 * Updated interface
 * Some internal OO usage
 * CDM & DatabaseConnector

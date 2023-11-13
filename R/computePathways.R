@@ -9,6 +9,7 @@
 #' @template param_connectionDetails
 #' @template param_cdmSchema
 #' @template param_resultSchema
+#' @param tempEmulationSchema Schema used to emulate temp tables
 #' @template param_includeTreatments
 #' @template param_periodPriorToIndex
 #' @template param_minEraDuration
@@ -124,6 +125,7 @@ computePathways <- function(
     connectionDetails = NULL,
     cdmSchema = NULL,
     resultSchema = NULL,
+    tempEmulationSchema = NULL,
     includeTreatments = "startDate",
     periodPriorToIndex = 0,
     minEraDuration = 0,
@@ -135,14 +137,15 @@ computePathways <- function(
     filterTreatments = "First",
     maxPathLength = 5,
     addNoPaths = TRUE) {
+  
   cdmInterface <- CDMInterface$new(
     connectionDetails = connectionDetails,
     cdmSchema = cdmSchema,
     resultSchema = resultSchema,
+    tempEmulationSchema = tempEmulationSchema,
     cdm = cdm
   )
-  on.exit(cdmInterface$destroy())
-
+  
   pathwayConstructor <- PathwayConstructor$new(
     cohorts = cohorts,
     cohortTableName = cohortTableName,
@@ -162,16 +165,11 @@ computePathways <- function(
     maxPathLength = maxPathLength,
     addNoPaths = addNoPaths
   )
-
-  pathwayConstructor$construct()
+  pathwayConstructor$construct(minEraDuration)
   andromeda <- pathwayConstructor$getAndromeda()
-  cdmInterface$addSex(andromeda)
-  cdmInterface$addAge(andromeda)
 
   andromeda$metadata <- andromeda$metadata %>%
     dplyr::collect() %>%
     dplyr::mutate(execution_end_date = as.character(Sys.Date()))
-  
-  
   return(andromeda)
 }

@@ -39,7 +39,59 @@ The settings belowallow the user to influence how the events of interest should 
 | addNoPaths | FALSE | Select to include untreated persons without treatment pathway in the sunburst plot |
 
 ![pathwaySettings](../man/figures/pathwaysettings.png)
-```{r libs, eval=FALSE}
+```{r prep, echo=FALSE, results='hide', message=FALSE, warning=FALSE, error=FALSE, eval=FALSE}
+connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+cdmDatabaseSchema <- "main"
+resultSchema <- "main"
+cohortTable <- "CohortTable"
+
+cohortsToCreate <- CohortGenerator::createEmptyCohortDefinitionSet()
+
+cohortJsonFiles <- list.files(
+  system.file(
+    package = "TreatmentPatterns",
+    "exampleCohorts"),
+  full.names = TRUE)
+
+for (i in seq_len(length(cohortJsonFiles))) {
+  cohortJsonFileName <- cohortJsonFiles[i]
+  cohortName <- tools::file_path_sans_ext(basename(cohortJsonFileName))
+  cohortJson <- readChar(cohortJsonFileName, file.info(
+    cohortJsonFileName)$size)
+  
+  cohortExpression <- CirceR::cohortExpressionFromJson(cohortJson)
+  
+  cohortSql <- CirceR::buildCohortQuery(
+    cohortExpression,
+    options = CirceR::createGenerateOptions(generateStats = FALSE))
+  cohortsToCreate <- rbind(
+    cohortsToCreate,
+    data.frame(
+      cohortId = i,
+      cohortName = cohortName,
+      sql = cohortSql,
+      stringsAsFactors = FALSE))
+}
+
+cohortTableNames <- CohortGenerator::getCohortTableNames(
+  cohortTable = cohortTable)
+
+CohortGenerator::createCohortTables(
+  connectionDetails = connectionDetails,
+  cohortDatabaseSchema = resultSchema,
+  cohortTableNames = cohortTableNames)
+
+# Generate the cohorts
+cohortsGenerated <- CohortGenerator::generateCohortSet(
+  connectionDetails = connectionDetails,
+  cdmDatabaseSchema = cdmDatabaseSchema,
+  cohortDatabaseSchema = resultSchema,
+  cohortTableNames = cohortTableNames,
+  cohortDefinitionSet = cohortsToCreate)
+
+```
+
+```{r library}
 library(dplyr)
 ```
 
@@ -67,7 +119,7 @@ cohorts <- dplyr::bind_rows(
 
 ## DatabaseConnector
 ### All-in-one
-```{r eval=FALSE}
+```{r executeTreatmentPatterns, eval=FALSE}
 tempDir <- tempdir()
 allDir <- file.path(tempDir, "all_in_one")
 
@@ -104,6 +156,8 @@ andromeda <- TreatmentPatterns::computePathways(
   cdmSchema = "main",
   resultSchema = "main"
 )
+
+export(andromeda = andromeda, outputPath = file.path(tempDir, "segmented"))
 ```
 
 ```{r intermediateResults, eval=FALSE}
@@ -137,4 +191,23 @@ TreatmentPatterns::executeTreatmentPatterns(
   outputPath = cdmDir,
   cdm = cdm
 )
+```
+
+## Evaluating results
+```{r, eval=FALSE}
+treatmentPathways <- read.csv(file.path(allDir, "treatmentPathways.csv"))
+
+data <- treatmentPathways %>%
+  filter(sex == "all") %>%
+  filter(age == "all") %>%
+  filter(indexYear == "all") %>%
+  filter(path != "None")
+```
+
+```{r sunburst, eval=FALSE}
+TreatmentPatterns::createSunburstPlot2(data)
+```
+
+```{r sankey, eval=FALSE}
+TreatmentPatterns::createSankeyDiagram2(data)
 ```

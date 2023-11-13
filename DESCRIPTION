@@ -2,7 +2,7 @@ Package: TreatmentPatterns
 Type: Package
 Title: Analyzes Real-World Treatment Patterns of a Study Population of
         Interest
-Version: 2.5.2
+Version: 2.6.0
 Authors@R: 
     c(person("Aniek", "Markus", , role = c("aut"), comment = c(ORCID = "0000-0001-5779-4794")),
       person("Maarten", "van Kessel", email = "m.l.vankessel@erasmusmc.nl", role = c("cre"), comment = c(ORCID = "0009-0006-8832-6030")))
@@ -14,21 +14,21 @@ Description:
 URL: https://github.com/darwin-eu-dev/TreatmentPatterns
 BugReports: https://github.com/darwin-eu-dev/TreatmentPatterns/issues
 Depends: R (>= 4.0)
-Imports: DatabaseConnector (>= 6.0.0), checkmate, dplyr, SqlRender,
-        stringr, stringi, fs, glue, utils, rjson, googleVis, stats,
-        Andromeda, tidyr, data.table, R6
+Imports: checkmate, dplyr, stringr, stringi, utils, rjson, googleVis,
+        stats, Andromeda, tidyr, R6, sunburstR, networkD3, htmlwidgets
 Suggests: knitr, rmarkdown, tibble, testthat (>= 3.0.0), usethis,
-        Eunomia, CDMConnector, CohortGenerator, webshot2, CirceR,
-        duckdb, DBI, withr
+        Eunomia, CDMConnector, DatabaseConnector (>= 6.0.0), SqlRender,
+        CohortGenerator, webshot2, CirceR, duckdb, DBI, withr
 License: Apache License 2.0
 Encoding: UTF-8
 RoxygenNote: 7.2.3
 VignetteBuilder: knitr
 Config/testthat/edition: 3
+Config/testthat/parallel: true
 Additional_repositories: https://ohdsi.github.io/drat
 NeedsCompilation: no
-Packaged: 2023-09-15 11:00:44 UTC; mvankessel
+Packaged: 2023-11-13 09:45:25 UTC; mvankessel
 Author: Aniek Markus [aut] (<https://orcid.org/0000-0001-5779-4794>),
   Maarten van Kessel [cre] (<https://orcid.org/0009-0006-8832-6030>)
 Repository: CRAN
-Date/Publication: 2023-09-15 13:42:10 UTC
+Date/Publication: 2023-11-13 11:13:26 UTC

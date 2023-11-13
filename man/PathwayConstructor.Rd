@@ -72,9 +72,20 @@ Validation method
 Construct the pathways. Generates \code{Andromeda::andromeda()} objects,
 which can be fetched using \code{self$getAndromeda()}.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{PathwayConstructor$construct()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{PathwayConstructor$construct(minEraDuration)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{minEraDuration}}{(\code{integer(1)}: \code{0})\cr
+Minimum time an event era should last to be included in analysis}
+
+\item{\code{minEraDuration}}{(\code{integer(1)}: \code{0})\cr
+Minimum time an event era should last to be included in analysis}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-PathwayConstructor-getAndromeda"></a>}}
@@ -118,6 +129,9 @@ Edit settings
 \item{\code{periodPriorToIndex}}{(\code{integer(1)}: \code{0})\cr
 Number of days prior to the index date of the target cohort | that event
 cohorts are allowed to start}
+
+\item{\code{minEraDuration}}{(\code{integer(1)}: \code{0})\cr
+Minimum time an event era should last to be included in analysis}
 
 \item{\code{minEraDuration}}{(\code{integer(1)}: \code{0})\cr
 Minimum time an event era should last to be included in analysis}

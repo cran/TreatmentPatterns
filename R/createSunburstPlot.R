@@ -221,11 +221,11 @@ createTreatmentPathways <- function(treatmentHistory) {
       .groups = "drop"
     )
   
-  layers <- treatmentPathways %>%
-    dplyr::rowwise() %>%
-    dplyr::mutate(l = length(.data$pathway)) %>%
-    dplyr::select("l") %>%
-    max()
+  # layers <- treatmentPathways %>%
+  #   dplyr::rowwise() %>%
+  #   dplyr::mutate(l = length(.data$pathway)) %>%
+  #   dplyr::select("l") %>%
+  #   max()
   
   treatmentPathways <- treatmentPathways %>%
     dplyr::group_by(.data$indexYear, .data$pathway) %>%
@@ -248,16 +248,18 @@ prepData <- function(treatmentHistory, year) {
     mutate(path = paste(.data$pathway, collapse = "-")) %>%
     select("indexYear", "path", "freq")
   
-  if (year == "all") {
-    dat <- dat %>%
-      group_by(.data$path) %>%
-      summarise(freq = sum(.data$freq))
-  } else {
-    dat <- dat %>%
-      filter(.data$indexYear == year)
-    if (nrow(dat) == 0) {
-      NULL
-      # message(sprintf("Not enough data for year: %s", year))
+  if (!is.na(year) || !is.null(year)) {
+    if (year == "all") {
+      dat <- dat %>%
+        group_by(.data$path) %>%
+        summarise(freq = sum(.data$freq))
+    } else {
+      dat <- dat %>%
+        filter(.data$indexYear == year)
+      if (nrow(dat) == 0) {
+        NULL
+        # message(sprintf("Not enough data for year: %s", year))
+      }
     }
   }
   return(dat)
@@ -330,7 +332,11 @@ toFile <- function(json, treatmentPathways, outputFile) {
     html
   )
   
-  message(glue::glue("Writing sunburst plot to {file.path(outputFile)}"))
+  message(sprintf(
+    "Writing sunburst plot to %s",
+    file.path(outputFile)
+  ))
+  
   # Save HTML file
   writeLines(
     text = html,
@@ -345,6 +351,7 @@ toFile <- function(json, treatmentPathways, outputFile) {
 #'
 #' @template param_treatmentPathways
 #' @template param_outputFile
+#' @template param_groupCombinations
 #' @template param_returnHTML
 #'
 #' @export
@@ -370,7 +377,12 @@ toFile <- function(json, treatmentPathways, outputFile) {
 #'   treatmentPatwhays,
 #'   outputFile
 #' )
-createSunburstPlot <- function(treatmentPathways, outputFile, returnHTML = FALSE) {
+createSunburstPlot <- function(treatmentPathways, outputFile, groupCombinations = FALSE, returnHTML = FALSE) {
+  treatmentPathways <- doGroupCombinations(
+    treatmentPathways = treatmentPathways,
+    groupCombinations = groupCombinations
+  )
+  
   data <- treatmentPathways %>%
     mutate(freq = as.integer(.data$freq)) %>%
     select("path", "freq")
@@ -391,4 +403,44 @@ createSunburstPlot <- function(treatmentPathways, outputFile, returnHTML = FALSE
   } else {
     toFile(json, treatmentPathways, outputFile)
   }
+}
+
+#' createSunburstPlot2
+#' 
+#' New sunburstPlot function
+#'
+#' @template param_treatmentPathways 
+#' @template param_groupCombinations
+#' @param colors (`character(n)`) Vector of hex colors codes.
+#'
+#' @return (`htmlwidget`)
+#' @export
+#'
+#' @examples
+#' # Dummy data, typically read from treatmentPathways.csv
+#' treatmentPatwhays <- data.frame(
+#'   path = c("Acetaminophen", "Acetaminophen-Amoxicillin+Clavulanate",
+#'            "Acetaminophen-Aspirin", "Amoxicillin+Clavulanate", "Aspirin"),
+#'   freq = c(206, 6, 14, 48, 221),
+#'   sex = rep("all", 5),
+#'   age = rep("all", 5),
+#'   index_year = rep("all", 5)
+#' )
+#' 
+#' createSunburstPlot2(treatmentPatwhays)
+createSunburstPlot2 <- function(treatmentPathways, groupCombinations = FALSE, colors = NULL) {
+  treatmentPathways <- doGroupCombinations(
+    treatmentPathways = treatmentPathways,
+    groupCombinations = groupCombinations
+  )
+  
+  if (is.null(colors)) {
+    colors <- getColorPalette(treatmentPathways)
+  }
+  
+  sunburstR::sunburst(
+    data = treatmentPathways,
+    colors = colors,
+    sortFunction = htmlwidgets::JS("function (a, b) {return a.value - b.value;}")
+  )
 }

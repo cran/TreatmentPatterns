@@ -12,6 +12,7 @@
 #' @template param_connectionDetails
 #' @template param_cdmSchema
 #' @template param_resultSchema
+#' @param tempEmulationSchema (`character(1)`) Schema to emulate temp tables.
 #' @template param_includeTreatments
 #' @template param_periodPriorToIndex
 #' @template param_minEraDuration
@@ -234,6 +235,7 @@ executeTreatmentPatterns <- function(
     connectionDetails = NULL,
     cdmSchema = NULL,
     resultSchema = NULL,
+    tempEmulationSchema = NULL,
     includeTreatments = "startDate",
     periodPriorToIndex = 0,
     minEraDuration = 0,
@@ -257,6 +259,7 @@ executeTreatmentPatterns <- function(
     connectionDetails = connectionDetails,
     cdmSchema = cdmSchema,
     resultSchema = resultSchema,
+    tempEmulationSchema = tempEmulationSchema,
     includeTreatments = includeTreatments,
     periodPriorToIndex = periodPriorToIndex,
     minEraDuration = minEraDuration,

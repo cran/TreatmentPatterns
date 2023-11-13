@@ -1633,6 +1633,8 @@ settings</a></li>
 <li><a href="#segmented" id="toc-segmented">Segmented</a></li>
 </ul></li>
 <li><a href="#cdmconnector" id="toc-cdmconnector">CDMConnector</a></li>
+<li><a href="#evaluating-results" id="toc-evaluating-results">Evaluating
+results</a></li>
 </ul>
 </div>
 
@@ -1727,6 +1729,14 @@ sunburst plot</td>
 <div class="figcaption">pathwaySettings</div>
 </div>
 <pre class="r"><code>library(dplyr)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;dplyr&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:stats&#39;:
+## 
+##     filter, lag</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     intersect, setdiff, setequal, union</code></pre>
 <pre class="r"><code># Select Viral Sinusitis Cohort
 targetCohorts &lt;- cohortsGenerated %&gt;%
   filter(cohortName == &quot;ViralSinusitis&quot;) %&gt;%
@@ -1786,7 +1796,9 @@ intermediate files by querying the andromeda environment.</p>
   connectionDetails = connectionDetails,
   cdmSchema = &quot;main&quot;,
   resultSchema = &quot;main&quot;
-)</code></pre>
+)
+
+export(andromeda = andromeda, outputPath = file.path(tempDir, &quot;segmented&quot;))</code></pre>
 <pre class="r"><code>names(andromeda)</code></pre>
 <pre class="r"><code>andromeda$treatmentHistory</code></pre>
 <p>The files inside the andromeda environment can be exported using the
@@ -1812,6 +1824,18 @@ TreatmentPatterns::executeTreatmentPatterns(
   outputPath = cdmDir,
   cdm = cdm
 )</code></pre>
+</div>
+<div id="evaluating-results" class="section level2">
+<h2>Evaluating results</h2>
+<pre class="r"><code>treatmentPathways &lt;- read.csv(file.path(allDir, &quot;treatmentPathways.csv&quot;))
+
+data &lt;- treatmentPathways %&gt;%
+  filter(sex == &quot;all&quot;) %&gt;%
+  filter(age == &quot;all&quot;) %&gt;%
+  filter(indexYear == &quot;all&quot;) %&gt;%
+  filter(path != &quot;None&quot;)</code></pre>
+<pre class="r"><code>TreatmentPatterns::createSunburstPlot2(data)</code></pre>
+<pre class="r"><code>TreatmentPatterns::createSankeyDiagram2(data)</code></pre>
 </div>
 
 

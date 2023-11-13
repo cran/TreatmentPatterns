@@ -11,6 +11,7 @@ computePathways(
   connectionDetails = NULL,
   cdmSchema = NULL,
   resultSchema = NULL,
+  tempEmulationSchema = NULL,
   includeTreatments = "startDate",
   periodPriorToIndex = 0,
   minEraDuration = 0,
@@ -47,6 +48,8 @@ Optional; In congruence with \code{connectionDetails} and \code{resultSchema}. I
 
 \item{resultSchema}{(\code{character(1)}: \code{NULL})\cr
 Optional; In congruence with \code{connectionDetails} and \code{cdmSchema}. Ignores \code{cdm}.}
+
+\item{tempEmulationSchema}{Schema used to emulate temp tables}
 
 \item{includeTreatments}{(\code{character(1)}: \code{"startDate"})\cr}
 

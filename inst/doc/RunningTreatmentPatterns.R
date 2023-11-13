@@ -1,8 +1,59 @@
 ## ----setup, include=FALSE-----------------------------------------------------
 knitr::opts_chunk$set(echo = TRUE)
 
-## ----libs, eval=FALSE---------------------------------------------------------
-#  library(dplyr)
+## ----prep, echo=FALSE, results='hide', message=FALSE, warning=FALSE, error=FALSE, eval=FALSE----
+#  connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+#  cdmDatabaseSchema <- "main"
+#  resultSchema <- "main"
+#  cohortTable <- "CohortTable"
+#  
+#  cohortsToCreate <- CohortGenerator::createEmptyCohortDefinitionSet()
+#  
+#  cohortJsonFiles <- list.files(
+#    system.file(
+#      package = "TreatmentPatterns",
+#      "exampleCohorts"),
+#    full.names = TRUE)
+#  
+#  for (i in seq_len(length(cohortJsonFiles))) {
+#    cohortJsonFileName <- cohortJsonFiles[i]
+#    cohortName <- tools::file_path_sans_ext(basename(cohortJsonFileName))
+#    cohortJson <- readChar(cohortJsonFileName, file.info(
+#      cohortJsonFileName)$size)
+#  
+#    cohortExpression <- CirceR::cohortExpressionFromJson(cohortJson)
+#  
+#    cohortSql <- CirceR::buildCohortQuery(
+#      cohortExpression,
+#      options = CirceR::createGenerateOptions(generateStats = FALSE))
+#    cohortsToCreate <- rbind(
+#      cohortsToCreate,
+#      data.frame(
+#        cohortId = i,
+#        cohortName = cohortName,
+#        sql = cohortSql,
+#        stringsAsFactors = FALSE))
+#  }
+#  
+#  cohortTableNames <- CohortGenerator::getCohortTableNames(
+#    cohortTable = cohortTable)
+#  
+#  CohortGenerator::createCohortTables(
+#    connectionDetails = connectionDetails,
+#    cohortDatabaseSchema = resultSchema,
+#    cohortTableNames = cohortTableNames)
+#  
+#  # Generate the cohorts
+#  cohortsGenerated <- CohortGenerator::generateCohortSet(
+#    connectionDetails = connectionDetails,
+#    cdmDatabaseSchema = cdmDatabaseSchema,
+#    cohortDatabaseSchema = resultSchema,
+#    cohortTableNames = cohortTableNames,
+#    cohortDefinitionSet = cohortsToCreate)
+#  
+
+## ----library------------------------------------------------------------------
+library(dplyr)
 
 ## ----setupCohorts, eval=FALSE-------------------------------------------------
 #  # Select Viral Sinusitis Cohort
@@ -25,7 +76,7 @@ knitr::opts_chunk$set(echo = TRUE)
 #    exitCohorts %>% mutate(type = "exit")
 #  )
 
-## ----eval=FALSE---------------------------------------------------------------
+## ----executeTreatmentPatterns, eval=FALSE-------------------------------------
 #  tempDir <- tempdir()
 #  allDir <- file.path(tempDir, "all_in_one")
 #  
@@ -59,6 +110,8 @@ knitr::opts_chunk$set(echo = TRUE)
 #    cdmSchema = "main",
 #    resultSchema = "main"
 #  )
+#  
+#  export(andromeda = andromeda, outputPath = file.path(tempDir, "segmented"))
 
 ## ----intermediateResults, eval=FALSE------------------------------------------
 #  names(andromeda)
@@ -86,4 +139,19 @@ knitr::opts_chunk$set(echo = TRUE)
 #    outputPath = cdmDir,
 #    cdm = cdm
 #  )
+
+## ---- eval=FALSE--------------------------------------------------------------
+#  treatmentPathways <- read.csv(file.path(allDir, "treatmentPathways.csv"))
+#  
+#  data <- treatmentPathways %>%
+#    filter(sex == "all") %>%
+#    filter(age == "all") %>%
+#    filter(indexYear == "all") %>%
+#    filter(path != "None")
+
+## ----sunburst, eval=FALSE-----------------------------------------------------
+#  TreatmentPatterns::createSunburstPlot2(data)
+
+## ----sankey, eval=FALSE-------------------------------------------------------
+#  TreatmentPatterns::createSankeyDiagram2(data)
 

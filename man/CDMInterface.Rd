@@ -12,8 +12,6 @@ Abstract interface to the CDM, using CDMConnector or DatabaseConnector.
 \item \href{#method-CDMInterface-new}{\code{CDMInterface$new()}}
 \item \href{#method-CDMInterface-validate}{\code{CDMInterface$validate()}}
 \item \href{#method-CDMInterface-fetchCohortTable}{\code{CDMInterface$fetchCohortTable()}}
-\item \href{#method-CDMInterface-addAge}{\code{CDMInterface$addAge()}}
-\item \href{#method-CDMInterface-addSex}{\code{CDMInterface$addSex()}}
 \item \href{#method-CDMInterface-fetchMetadata}{\code{CDMInterface$fetchMetadata()}}
 \item \href{#method-CDMInterface-destroy}{\code{CDMInterface$destroy()}}
 \item \href{#method-CDMInterface-clone}{\code{CDMInterface$clone()}}
@@ -29,6 +27,7 @@ Initializer method
   connectionDetails = NULL,
   cdmSchema = NULL,
   resultSchema = NULL,
+  tempEmulationSchema = NULL,
   cdm = NULL
 )}\if{html}{\out{</div>}}
 }
@@ -44,6 +43,8 @@ Optional; In congruence with \code{connectionDetails} and \code{resultSchema}. I
 
 \item{\code{resultSchema}}{(\code{character(1)}: \code{NULL})\cr
 Optional; In congruence with \code{connectionDetails} and \code{cdmSchema}. Ignores \code{cdm}.}
+
+\item{\code{tempEmulationSchema}}{Schema used to emulate temp tables.}
 
 \item{\code{cdm}}{(\code{CDMConnector::cdm_from_con()}: \code{NULL})\cr
 Optional; Ignores \code{connectionDetails}, \code{cdmSchema}, and \code{resultSchema}.}
@@ -73,76 +74,45 @@ Validation method
 \subsection{Method \code{fetchCohortTable()}}{
 Fetch specified cohort IDs from a specified cohort table
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{CDMInterface$fetchCohortTable(cohortIds, cohortTableName)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{CDMInterface$fetchCohortTable(
+  cohorts,
+  cohortTableName,
+  andromeda,
+  andromedaTableName,
+  minEraDuration = NULL
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{cohortIds}}{(\code{integer(1)})\cr
-Cohort ID's of cohorts to investigate.}
+\item{\code{cohorts}}{(\code{data.frame()})\cr
+Data frame containing the following columns and data types:
+\describe{
+\item{cohortId \code{numeric(1)}}{Cohort ID's of the cohorts to be used in the cohort table.}
+\item{cohortName \code{character(1)}}{Cohort names of the cohorts to be used in the cohort table.}
+\item{type \code{character(1)} ["target", "event', "exit"]}{Cohort type, describing if the cohort is a target, event, or exit cohort}
+}}
 
 \item{\code{cohortTableName}}{(\code{character(1)})\cr
 Cohort table name.}
+
+\item{\code{andromeda}}{(\code{Andromeda::andromeda()})
+Andromeda object.}
+
+\item{\code{andromeda}}{(\code{Andromeda::andromeda()})
+Andromeda object.}
+
+\item{\code{andromedaTableName}}{(\code{character(1)})\cr
+Name of the table in the Andromeda object where the data will be loaded.}
+
+\item{\code{minEraDuration}}{(\code{integer(1)}: \code{0})\cr
+Minimum time an event era should last to be included in analysis}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
 (\code{data.frame})
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-CDMInterface-addAge"></a>}}
-\if{latex}{\out{\hypertarget{method-CDMInterface-addAge}{}}}
-\subsection{Method \code{addAge()}}{
-Stratisfy the treatmentHistory data frame by age.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{CDMInterface$addAge(andromeda)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{andromeda}}{(\code{Andromeda::andromeda()})
-Andromeda object.}
-
-\item{\code{andromeda}}{(\code{Andromeda::andromeda()})
-Andromeda object.}
-
-\item{\code{andromeda}}{(\code{Andromeda::andromeda()})
-Andromeda object.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-(\code{data.frame()})
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-CDMInterface-addSex"></a>}}
-\if{latex}{\out{\hypertarget{method-CDMInterface-addSex}{}}}
-\subsection{Method \code{addSex()}}{
-Stratisfy the treatmentHistory data frame by sex.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{CDMInterface$addSex(andromeda)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{andromeda}}{(\code{Andromeda::andromeda()})
-Andromeda object.}
-
-\item{\code{andromeda}}{(\code{Andromeda::andromeda()})
-Andromeda object.}
-
-\item{\code{andromeda}}{(\code{Andromeda::andromeda()})
-Andromeda object.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-(\code{data.frame()})
 }
 }
 \if{html}{\out{<hr>}}
@@ -157,9 +127,6 @@ Fetch metadata from CDM
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{andromeda}}{(\code{Andromeda::andromeda()})
-Andromeda object.}
-
 \item{\code{andromeda}}{(\code{Andromeda::andromeda()})
 Andromeda object.}
 

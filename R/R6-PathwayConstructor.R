@@ -187,22 +187,27 @@ PathwayConstructor <- R6::R6Class(
     #' @description
     #' Construct the pathways. Generates `Andromeda::andromeda()` objects,
     #' which can be fetched using `self$getAndromeda()`.
-    construct = function() {
+    #' 
+    #' @template param_minEraDuration
+    construct = function(minEraDuration) {
       # Set up Andromeda sqlite environment
       private$andromeda <- Andromeda::andromeda()
       private$cdmInterface$fetchMetadata(private$andromeda)
 
-      private$andromeda$cohortTable <- private$cdmInterface$fetchCohortTable(
-        cohortIds = private$cohorts$cohortId,
-        cohortTableName = private$cohortTableName
+      private$cdmInterface$fetchCohortTable(
+        cohorts = private$cohorts,
+        cohortTableName = private$cohortTableName,
+        andromeda = private$andromeda,
+        andromedaTableName = "cohortTable",
+        minEraDuration = minEraDuration
       )
-      
+
       private$andromeda$cohortTable <- private$andromeda$cohortTable %>%
         dplyr::rename(
-          cohortId = "cohortDefinitionId",
-          personId = "subjectId",
-          startDate = "cohortStartDate",
-          endDate = "cohortEndDate"
+          cohortId = "cohort_definition_id",
+          personId = "subject_id",
+          startDate = "cohort_start_date",
+          endDate = "cohort_end_date"
         )
 
       private$andromeda <- constructPathways(
