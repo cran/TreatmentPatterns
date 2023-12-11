@@ -1,6 +1,8 @@
 #' depth
 #'
 #' Function to find depth of a list element.
+#' 
+#' @noRd
 #'
 #' @param x input list (element)
 #' @param thisdepth current list depth
@@ -23,6 +25,8 @@ depth <- function(x, thisdepth = 0) {
 #' stripname
 #'
 #' Recursive function to remove name from all levels of list.
+#' 
+#' @noRd
 #'
 #' @param x input list
 #' @param name the name of the list item from which the names will be removed
@@ -45,6 +49,8 @@ stripname <- function(x, name) {
 
 #' addChild
 #'
+#' @noRd
+#'
 #' @param j iterator
 #' @param children children to add
 #' @param parts labels of treatments
@@ -63,6 +69,8 @@ addChild <- function(j, children, parts, root) {
 }
 
 #' buildHierarchy
+#' 
+#' @noRd
 #'
 #' @param csv matrix
 #'
@@ -133,6 +141,8 @@ buildHierarchy <- function(csv) {
 #'
 #' Help function to transform data in csv format to required JSON format for
 #' HTML.
+#' 
+#' @noRd
 #'
 #' @param data (`data.frame()`)
 #' @param outcomes (`c()`)
@@ -208,64 +218,9 @@ transformCSVtoJSON <- function(data, outcomes) {
 }
 
 
-#' createTreatmentPathways
-#'
-#' @param treatmentHistory (`data.frame()`)
-#'
-#' @return (`data.frame()`)
-createTreatmentPathways <- function(treatmentHistory) {
-  treatmentPathways <- treatmentHistory %>%
-    dplyr::group_by(.data$personId, .data$indexYear) %>%
-    dplyr::summarise(
-      pathway = list(.data$eventCohortName[.data$eventSeq]),
-      .groups = "drop"
-    )
-  
-  # layers <- treatmentPathways %>%
-  #   dplyr::rowwise() %>%
-  #   dplyr::mutate(l = length(.data$pathway)) %>%
-  #   dplyr::select("l") %>%
-  #   max()
-  
-  treatmentPathways <- treatmentPathways %>%
-    dplyr::group_by(.data$indexYear, .data$pathway) %>%
-    dplyr::summarise(freq = length(.data$personId), .groups = "drop")
-  
-  return(treatmentPathways)
-}
-
-#' prepData
-#'
-#' @param treatmentHistory (`data.frame()`)
-#' @param year (`integer(1)`)
-#'
-#' @return (`data.frame()`)
-prepData <- function(treatmentHistory, year) {
-  treatmentPathways <- createTreatmentPathways(treatmentHistory)
-  
-  dat <- treatmentPathways %>%
-    rowwise() %>%
-    mutate(path = paste(.data$pathway, collapse = "-")) %>%
-    select("indexYear", "path", "freq")
-  
-  if (!is.na(year) || !is.null(year)) {
-    if (year == "all") {
-      dat <- dat %>%
-        group_by(.data$path) %>%
-        summarise(freq = sum(.data$freq))
-    } else {
-      dat <- dat %>%
-        filter(.data$indexYear == year)
-      if (nrow(dat) == 0) {
-        NULL
-        # message(sprintf("Not enough data for year: %s", year))
-      }
-    }
-  }
-  return(dat)
-}
-
 #' toList
+#'
+#' @noRd
 #'
 #' @param json (`character(1)`)
 #'
@@ -301,6 +256,8 @@ toList <- function(json) {
 }
 
 #' toFile
+#'
+#' @noRd
 #'
 #' @param json (`character(1)`)
 #' @param treatmentPathways (`data.frame()`)
@@ -411,7 +368,7 @@ createSunburstPlot <- function(treatmentPathways, outputFile, groupCombinations 
 #'
 #' @template param_treatmentPathways 
 #' @template param_groupCombinations
-#' @param colors (`character(n)`) Vector of hex colors codes.
+#' @param ... Paramaters for \link[sunburstR]{sunburst}.
 #'
 #' @return (`htmlwidget`)
 #' @export
@@ -428,7 +385,7 @@ createSunburstPlot <- function(treatmentPathways, outputFile, groupCombinations 
 #' )
 #' 
 #' createSunburstPlot2(treatmentPatwhays)
-createSunburstPlot2 <- function(treatmentPathways, groupCombinations = FALSE, colors = NULL) {
+createSunburstPlot2 <- function(treatmentPathways, groupCombinations = FALSE, ...) {
   treatmentPathways <- doGroupCombinations(
     treatmentPathways = treatmentPathways,
     groupCombinations = groupCombinations
@@ -440,7 +397,7 @@ createSunburstPlot2 <- function(treatmentPathways, groupCombinations = FALSE, co
   
   sunburstR::sunburst(
     data = treatmentPathways,
-    colors = colors,
-    sortFunction = htmlwidgets::JS("function (a, b) {return a.value - b.value;}")
+    sortFunction = htmlwidgets::JS("function (a, b) {return a.value - b.value;}"),
+    ...
   )
 }

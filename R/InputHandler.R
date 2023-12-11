@@ -1,0 +1,215 @@
+#' @title InputHandler
+#'
+#' @description
+#' Class to handle input from the user. Supports direct paths or input fields
+#' through `setDataPath()`.\cr\cr
+#' 
+#' @field reactiveValues (`reactiveValues`)\cr
+#' reactiveValues class created by \link[shiny]{reactiveValues}.
+#' 
+#' @export
+InputHandler <- R6::R6Class(
+  classname = "InputHandler",
+  inherit = Module,
+  
+  # Public ----
+  public = list(
+    #' @description
+    #' Method to include a \link[shinydashboard]{menuItem} to link to the body.
+    #'
+    #' @param label (`character(1)`)\cr
+    #' Label to show for the `menuItem`.
+    #' 
+    #' @param tag (`character(1)`)\cr
+    #' Tag to use internally in `input`.
+    #' 
+    #' @return (`menuItem`)
+    uiMenu = function(label = "File upload", tag = "fileUpload") {
+      shinydashboard::menuItem(
+        text = label,
+        tabName = tag,
+        icon = shiny::icon(lib = "glyphicon", name = "upload")
+      )
+    },
+
+    #' @description
+    #' Method to include a \link[shinydashboard]{tabItem} to include the body.
+    #'
+    #' @return (`tabItem`)
+    uiBody = function() {
+      shinydashboard::tabItem(
+        tabName = "fileUpload",
+        private$uploadFile()
+      )
+    },
+    
+    #' @description
+    #' Method to handle the back-end.
+    #'
+    #' @param input (`input`)\cr
+    #' Input from the server function.
+    #'
+    #' @param output (`output`)\cr
+    #' Output from the server function.
+    #'
+    #' @param session (`session`)\cr
+    #' Session from the server function.
+    #' 
+    #' @return (`NULL`)
+    server = function(input, output, session) {
+      private$dbSelector(input, output, session)
+      private$fetchTreatmentPathways()
+      private$fetchCountsAge()
+      private$fetchCountsSex()
+      private$fetchCountsYear()
+      private$fetchMetadata()
+      private$fetchSummaryStatsTherapyDuration()
+    },
+    
+    #' @description
+    #' Method to include a \link[shiny]{uiOutput} to select between multiple
+    #' uploaded files.
+    #'
+    #' @return (`uiOutput`)
+    uiDatabaseSelector = function() {
+      shiny::uiOutput(outputId = shiny::NS(private$.namespace, "dbSelector"))
+    },
+    
+    #' @description
+    #' Method to dictate where the data is coming from, either from the `input`
+    #' through the shiny application, or from a specified path. When one is
+    #' provided, the other is ignored.
+    #'
+    #' @param tag (`character(1)`)\cr
+    #' Tag to use internally in `input`.
+    #' 
+    #' @param input (`input`)\cr
+    #' Input from the server function of the shiny app.
+    #' 
+    #' @param path (`character(1)`)\cr
+    #' Path to a zip-file containing TreatmentPatterns output files.
+    #'
+    #' @return (`invisible(self)`)
+    setDataPath = function(tag = "uploadField", input = NULL, path = NULL) {
+      if (!is.null(input)) {
+        shiny::observe({
+          private$.reactiveValues$dataPath <- input[[tag]]$datapath
+          private$.reactiveValues$dbNames <- input[[tag]]$name
+        })
+      } else if (!is.null(path)) {
+        private$.reactiveValues$dataPath <- path
+        private$.reactiveValues$dbNames <- basename(path)
+      } else {
+        stop("Cannot assert where data is comming from.")
+      }
+      return(invisible(self))
+    }
+  ),
+  
+  # Private ----
+  private = list(
+    ## Fields ----
+    .reactiveValues = shiny::reactiveValues(
+      dataPath = "",
+      dbNames = NULL,
+      treatmentPathways = NULL,
+      countsAge = NULL,
+      countsSex = NULL,
+      countsYear = NULL,
+      summaryStatsTherapyDuration = NULL,
+      metadata = NULL
+    ),
+    
+    ## Methods ----
+    ### UI ----
+    uploadFile = function() {
+      shiny::tagList(
+        shiny::fileInput(
+          inputId = shiny::NS(private$.namespace, "uploadField"),
+          label = "Upload TreatmentPatterns output zip-file(s).",
+          accept = ".zip"
+        )
+      )
+    },
+    
+    dbSelector = function(input, output, session) {
+      shiny::observeEvent(self$reactiveValues$dataPath, {
+        output$dbSelector <- renderUI({
+          shiny::checkboxGroupInput(
+            inputId = session$ns("dbSelector"),
+            label = "Databases",
+            choices = unlist(self$reactiveValues$dbNames),
+            selected = unlist(self$reactiveValues$dbNames)
+          )
+        })
+      })
+    },
+    
+    ### Server ----
+    fetchFile = function(fileName) {
+      n <- length(private$.reactiveValues$dataPath)
+      
+      lapply(seq_len(n), function(i) {
+        read.csv(unzip(
+          zipfile = private$.reactiveValues$dataPath[[i]],
+          files = fileName, exdir = tempdir()
+        )) %>%
+          dplyr::mutate(db = private$.reactiveValues$dbNames[[i]])
+      }) %>%
+        dplyr::bind_rows()
+    },
+    
+    fetchTreatmentPathways = function() {
+      shiny::observeEvent(private$.reactiveValues$dataPath, {
+        if (!is.null(private$.reactiveValues$dataPath)) {
+          private$.reactiveValues$treatmentPathways <- private$fetchFile("treatmentPathways.csv")
+        }
+      })
+    },
+    
+    fetchCountsAge = function() {
+      shiny::observeEvent(private$.reactiveValues$dataPath, {
+        if (!is.null(private$.reactiveValues$dataPath)) {
+          private$.reactiveValues$countsAge <- private$fetchFile("countsAge.csv")
+        }
+      })
+    },
+    
+    fetchCountsSex = function() {
+      shiny::observeEvent(private$.reactiveValues$dataPath, {
+        if (!is.null(private$.reactiveValues$dataPath)) {
+          private$.reactiveValues$countsSex <- private$fetchFile("countsSex.csv")
+        }
+      })
+    },
+    
+    fetchCountsYear = function() {
+      shiny::observeEvent(private$.reactiveValues$dataPath, {
+        if (!is.null(private$.reactiveValues$dataPath)) {
+          private$.reactiveValues$countsYear <- private$fetchFile("countsYear.csv")
+        }
+      })
+    },
+    
+    fetchMetadata = function() {
+      shiny::observeEvent(private$.reactiveValues$dataPath, {
+        if (!is.null(private$.reactiveValues$dataPath)) {
+          private$.reactiveValues$metadata <- private$fetchFile("metadata.csv")
+        }
+      })
+    },
+    
+    fetchSummaryStatsTherapyDuration = function() {
+      shiny::observeEvent(private$.reactiveValues$dataPath, {
+        if (!is.null(private$.reactiveValues$dataPath)) {
+          private$.reactiveValues$summaryStatsTherapyDuration <- private$fetchFile("summaryStatsTherapyDuraion.csv")
+        }
+      })
+    }
+  ),
+  
+  # Active ----
+  active = list(
+    reactiveValues = function() return(private$.reactiveValues)
+  )
+)

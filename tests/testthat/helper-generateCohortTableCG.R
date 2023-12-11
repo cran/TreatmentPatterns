@@ -1,6 +1,6 @@
 generateCohortTableCG <- function() {
   connectionDetails <- Eunomia::getEunomiaConnectionDetails()
-  cohortTableName <- "CohortTable"
+  cohortTableName <- "cohort_table"
   resultSchema <- "main"
   cdmSchema <- "main"
   

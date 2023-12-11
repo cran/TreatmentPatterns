@@ -7,7 +7,8 @@
 createSankeyDiagram2(
   treatmentPathways,
   groupCombinations = FALSE,
-  colors = NULL
+  colors = NULL,
+  ...
 )
 }
 \arguments{
@@ -21,6 +22,8 @@ The contents of the treatmentPathways.csv-file as a data.frame().}
 }}
 
 \item{colors}{(\code{character(n)}) Vector of hex color codes.}
+
+\item{...}{Paramaters for \link[networkD3]{sankeyNetwork}.}
 }
 \value{
 (\code{htmlwidget})

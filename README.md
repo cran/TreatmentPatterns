@@ -13,7 +13,7 @@ coverage](https://codecov.io/gh/darwin-eu-dev/TreatmentPatterns/branch/master/gr
 
 <!-- badges: end -->
 
-[*Markus A, Verhamme K, Kors J, Rijnbeek P (2002). “TreatmentPatterns:
+[*Markus A, Verhamme K, Kors J, Rijnbeek P (2022). “TreatmentPatterns:
 An R package to facilitate the standardized development and analysis of
 treatment patterns across disease domains.” Computer Methods and
 Programs in

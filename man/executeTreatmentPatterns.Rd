@@ -13,18 +13,10 @@ executeTreatmentPatterns(
   cdmSchema = NULL,
   resultSchema = NULL,
   tempEmulationSchema = NULL,
-  includeTreatments = "startDate",
-  periodPriorToIndex = 0,
   minEraDuration = 0,
-  splitEventCohorts = "",
-  splitTime = 30,
   eraCollapseSize = 30,
   combinationWindow = 30,
-  minPostCombinationDuration = 30,
-  filterTreatments = "First",
-  maxPathLength = 5,
-  minFreq = 5,
-  addNoPaths = TRUE
+  minCellCount = 5
 )
 }
 \arguments{
@@ -55,21 +47,8 @@ Optional; In congruence with \code{connectionDetails} and \code{cdmSchema}. Igno
 
 \item{tempEmulationSchema}{(\code{character(1)}) Schema to emulate temp tables.}
 
-\item{includeTreatments}{(\code{character(1)}: \code{"startDate"})\cr}
-
-\item{periodPriorToIndex}{(\code{integer(1)}: \code{0})\cr
-Number of days prior to the index date of the target cohort | that event
-cohorts are allowed to start}
-
 \item{minEraDuration}{(\code{integer(1)}: \code{0})\cr
 Minimum time an event era should last to be included in analysis}
-
-\item{splitEventCohorts}{(\code{character(n)}: \code{""})\cr
-Specify event cohort to split in acute (< X days) and therapy (>= X days)}
-
-\item{splitTime}{(\code{integer(1)}: \code{30})\cr
-Specify number of days (X) at which each of the split event cohorts should
-be split in acute and therapy}
 
 \item{eraCollapseSize}{(\code{integer(1)}: \code{30})\cr
 Window of time between which two eras of the same event cohort are collapsed
@@ -79,24 +58,9 @@ into one era}
 Window of time two event cohorts need to overlap to be considered a
 combination treatment}
 
-\item{minPostCombinationDuration}{(\code{integer(1)}: \code{30})\cr
-Minimum time an event era before or after a generated combination treatment
-should last to be included in analysis}
-
-\item{filterTreatments}{(\code{character(1)}: \code{"First"} ["first", "Changes", "all"])\cr
-Select first occurrence of (‘First’); changes between (‘Changes’); or all
-event cohorts (‘All’).}
-
-\item{maxPathLength}{(\code{integer(1)}: \code{5})\cr
-Maximum number of steps included in treatment pathway}
-
-\item{minFreq}{(\code{integer(1)}: \code{5})\cr
-Minimum frequency required per pathway. Censors data below \code{x} as \verb{<x}. This
+\item{minCellCount}{(\code{integer(1)}: \code{5})\cr
+Minimum count required per pathway. Censors data below \code{x} as \verb{<x}. This
 minimum value will carry over to the sankey diagram and sunburst plot.}
-
-\item{addNoPaths}{(\code{logical(1)}: \code{TRUE})\cr
-Select to include untreated persons without treatment pathway in the
-sunburst plot}
 }
 \value{
 (\code{invisible(NULL)})
@@ -109,200 +73,45 @@ outcomes, you can run \link[TreatmentPatterns]{computePathways} and
 }
 \examples{
 \donttest{
-  # Using CDMConnector
-  ableToRun <- all(c(
-    require("CDMConnector", character.only = TRUE),
-    require("DBI", character.only = TRUE),
-    require("duckdb", character.only = TRUE),
-    require("dplyr", character.only = TRUE)
-  ))
-  
-  if (ableToRun) {
-    withr::local_envvar(
-      EUNOMIA_DATA_FOLDER = Sys.getenv("EUNOMIA_DATA_FOLDER", unset = tempfile())
-    )
+library(TreatmentPatterns)
+library(CDMConnector)
+library(dplyr)
+
+withr::local_envvar(
+  EUNOMIA_DATA_FOLDER = Sys.getenv("EUNOMIA_DATA_FOLDER", unset = tempfile())
+)
+
+downloadEunomiaData(overwrite = TRUE)
+
+con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+cdm <- cdmFromCon(con, cdmSchema = "main", writeSchema = "main")
+
+cohortSet <- readCohortSet(
+  path = system.file(package = "TreatmentPatterns", "exampleCohorts")
+)
+
+cdm <- generateCohortSet(
+  cdm = cdm,
+  cohortSet = cohortSet,
+  name = "cohort_table"
+)
+
+cohorts <- cohortSet \%>\%
+  # Remove 'cohort' and 'json' columns
+  select(-"cohort", -"json") \%>\%
+  mutate(type = c("event", "event", "event", "event", "exit", "event", "event", "target")) \%>\%
+  rename(
+    cohortId = "cohort_definition_id",
+    cohortName = "cohort_name",
+  )
+
+executeTreatmentPatterns(
+  cohorts = cohorts,
+  cohortTableName = "cohort_table",
+  cdm = cdm,
+  outputPath = tempdir()
+)
     
-    CDMConnector::downloadEunomiaData()
-  
-    con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
-    cdm <- cdm_from_con(con, cdm_schema = "main")
-
-    cdm$CohortTable <- dplyr::union_all(
-    # Viral Sinusitis
-    cdm$condition_occurrence \%>\%
-      filter(.data$condition_concept_id == 40481087) \%>\%
-      inner_join(cdm$person, by = join_by(person_id == person_id)) \%>\%
-      select("person_id", "condition_start_date", "condition_end_date") \%>\%
-      mutate(cohort_definition_id = 1) \%>\%
-      rename(
-        cohort_start_date = "condition_start_date",
-        cohort_end_date = "condition_end_date"
-      ),
-
-    # Aspirin
-    cdm$drug_era \%>\%
-      filter(.data$drug_concept_id == 1112807) \%>\%
-      inner_join(cdm$person, by = join_by(person_id == person_id)) \%>\%
-      select("person_id", "drug_era_start_date", "drug_era_end_date") \%>\%
-      mutate(cohort_definition_id = 2) \%>\%
-      rename(
-        cohort_start_date = "drug_era_start_date",
-        cohort_end_date = "drug_era_end_date"
-      ),
-
-    # Acetaminophen
-    cdm$drug_era \%>\%
-      filter(.data$drug_concept_id == 1125315) \%>\%
-      inner_join(cdm$person, by = join_by(person_id == person_id)) \%>\%
-      select("person_id", "drug_era_start_date", "drug_era_end_date") \%>\%
-      mutate(cohort_definition_id = 3) \%>\%
-      rename(
-        cohort_start_date = "drug_era_start_date",
-        cohort_end_date = "drug_era_end_date"
-      ),
-
-    # Clavunate
-    cdm$drug_era \%>\%
-      filter(.data$drug_concept_id == 1759842) \%>\%
-      inner_join(cdm$person, by = join_by(person_id == person_id)) \%>\%
-      select("person_id", "drug_era_start_date", "drug_era_end_date") \%>\%
-      mutate(cohort_definition_id = 4) \%>\%
-      rename(
-        cohort_start_date = "drug_era_start_date",
-        cohort_end_date = "drug_era_end_date"
-      ),
-
-    # Death
-    cdm$observation \%>\%
-      filter(.data$observation_concept_id == 4306655) \%>\%
-      inner_join(cdm$person, by = join_by(person_id == person_id)) \%>\%
-      select("person_id", "observation_date") \%>\%
-      mutate(
-        cohort_definition_id = 5,
-        cohort_end_date = observation_date) \%>\%
-      rename(
-        cohort_start_date = "observation_date"
-      )
-    )
-
-    cdm$CohortTable <- cdm$CohortTable \%>\%
-      rename(
-        SUBJECT_ID = "person_id",
-        COHORT_START_DATE = "cohort_start_date",
-        COHORT_END_DATE = "cohort_end_date",
-        COHORT_DEFINITION_ID = "cohort_definition_id"
-      )
-
-    cohortTableName <- "CohortTable"
-
-    cohorts <- data.frame(
-      cohortId = c(1, 2, 3, 4, 5),
-      cohortName = c("ViralSinusitis", "Acetaminophen", "Aspirin", "Clavulanate", "Death"),
-      type = c("target", "event", "event", "event", "exit")
-    )
-
-    try(
-      executeTreatmentPatterns(
-        cohorts,
-        cohortTableName,
-        tempdir(),
-        cdm
-      )
-    )
-    
-    DBI::dbDisconnect(con, shutdown = TRUE)
-  }
-
-  # Using DatabaseConnector
-  ableToRun <- invisible(all(
-    require("Eunomia", character.only = TRUE),
-    require("CirceR", character.only = TRUE),
-    require("CohortGenerator", character.only = TRUE),
-    require("dplyr", character.only = TRUE)
-  ))
-  
-  if (ableToRun) {
-    # CohortGenerator example
-    connectionDetails <- Eunomia::getEunomiaConnectionDetails()
-    cdmDatabaseSchema <- "main"
-    resultSchema <- "main"
-    cohortTable <- "CohortTable"
-
-    cohortsToCreate <- CohortGenerator::createEmptyCohortDefinitionSet()
-  
-    cohortJsonFiles <- list.files(
-      system.file(
-        package = "TreatmentPatterns",
-        "exampleCohorts"),
-        full.names = TRUE)
-
-    for (i in seq_len(length(cohortJsonFiles))) {
-      cohortJsonFileName <- cohortJsonFiles[i]
-      cohortName <- tools::file_path_sans_ext(basename(cohortJsonFileName))
-      cohortJson <- readChar(cohortJsonFileName, file.info(
-        cohortJsonFileName)$size)
-
-      cohortExpression <- CirceR::cohortExpressionFromJson(cohortJson)
-
-      cohortSql <- CirceR::buildCohortQuery(
-        cohortExpression,
-        options = CirceR::createGenerateOptions(generateStats = FALSE))
-    
-      cohortsToCreate <- rbind(
-        cohortsToCreate,
-        data.frame(
-          cohortId = i,
-          cohortName = cohortName,
-          sql = cohortSql,
-          stringsAsFactors = FALSE))
-    }
-
-    cohortTableNames <- CohortGenerator::getCohortTableNames(
-      cohortTable = cohortTable)
-
-    CohortGenerator::createCohortTables(
-      connectionDetails = connectionDetails,
-      cohortDatabaseSchema = resultSchema,
-      cohortTableNames = cohortTableNames)
-
-    # Generate the cohorts
-    cohortsGenerated <- CohortGenerator::generateCohortSet(
-      connectionDetails = connectionDetails,
-      cdmDatabaseSchema = cdmDatabaseSchema,
-      cohortDatabaseSchema = resultSchema,
-      cohortTableNames = cohortTableNames,
-      cohortDefinitionSet = cohortsToCreate)
-    
-    # Select Viral Sinusitis
-    targetCohorts <- cohortsGenerated \%>\%
-      filter(cohortName == "ViralSinusitis") \%>\%
-      select(cohortId, cohortName)
-
-    # Select everything BUT Viral Sinusitis cohorts
-    eventCohorts <- cohortsGenerated \%>\%
-      filter(cohortName != "ViralSinusitis" & cohortName != "Death") \%>\%
-      select(cohortId, cohortName)
-
-    exitCohorts <- cohortsGenerated \%>\%
-      filter(cohortName == "Death") \%>\%
-      select(cohortId, cohortName)
-
-    cohorts <- dplyr::bind_rows(
-      targetCohorts \%>\% mutate(type = "target"),
-      eventCohorts \%>\% mutate(type = "event"),
-      exitCohorts \%>\% mutate(type = "exit")
-    )
-    
-    try(
-      executeTreatmentPatterns(
-        cohorts = cohorts,
-        cohortTableName = cohortTable,
-        outputPath = tempdir(),
-        connectionDetails = connectionDetails,
-        cdmSchema = cdmDatabaseSchema,
-        resultSchema = resultSchema
-      )
-    )
-  }
+DBI::dbDisconnect(con, shutdown = TRUE)
 }
 }

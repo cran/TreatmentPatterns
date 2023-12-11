@@ -4,7 +4,14 @@
 \alias{export}
 \title{export}
 \usage{
-export(andromeda, outputPath, ageWindow = 10, minFreq = 5, archiveName = NULL)
+export(
+  andromeda,
+  outputPath,
+  ageWindow = 10,
+  minCellCount = 5,
+  censorType = "minCellCount",
+  archiveName = NULL
+)
 }
 \arguments{
 \item{andromeda}{(\code{Andromeda::andromeda()})
@@ -15,9 +22,16 @@ Andromeda object.}
 \item{ageWindow}{(\code{integer(1)}: \code{10})\cr
 Number of years to bin age groups into.}
 
-\item{minFreq}{(\code{integer(1)}: \code{5})\cr
-Minimum frequency required per pathway. Censors data below \code{x} as \verb{<x}. This
+\item{minCellCount}{(\code{integer(1)}: \code{5})\cr
+Minimum count required per pathway. Censors data below \code{x} as \verb{<x}. This
 minimum value will carry over to the sankey diagram and sunburst plot.}
+
+\item{censorType}{(\code{character(1)})\cr
+\describe{
+\item{\code{"cellCount"}}{Censors pathways <\code{cellCount} to \code{cellCount}.}
+\item{\code{"remove"}}{Censors pathways <\code{cellCount} by removing them completely.}
+\item{\code{"mean"}}{Censors pathways <\code{cellCount} to the mean of all frequencies below \code{cellCount}}
+}}
 
 \item{archiveName}{(\code{character(1)}: \code{NULL})\cr
 If not \code{NULL} adds the exported files to a ZIP-file with the specified archive name.}
@@ -31,102 +45,50 @@ object to sharable csv-files and/or a zip archive.
 }
 \examples{
 \donttest{
-  ableToRun <- invisible(all(
-    require("Eunomia", character.only = TRUE),
-    require("CirceR", character.only = TRUE),
-    require("CohortGenerator", character.only = TRUE),
-    require("dplyr", character.only = TRUE)
-  ))
-  
-  if (ableToRun) {
-    # CohortGenerator example
-    connectionDetails <- Eunomia::getEunomiaConnectionDetails()
-    cdmDatabaseSchema <- "main"
-    resultSchema <- "main"
-    cohortTable <- "CohortTable"
+library(TreatmentPatterns)
+library(CDMConnector)
+library(dplyr)
 
-    cohortsToCreate <- CohortGenerator::createEmptyCohortDefinitionSet()
-  
-    cohortJsonFiles <- list.files(
-      system.file(
-        package = "TreatmentPatterns",
-        "exampleCohorts"),
-        full.names = TRUE)
+withr::local_envvar(
+  EUNOMIA_DATA_FOLDER = Sys.getenv("EUNOMIA_DATA_FOLDER", unset = tempfile())
+)
 
-    for (i in seq_len(length(cohortJsonFiles))) {
-      cohortJsonFileName <- cohortJsonFiles[i]
-      cohortName <- tools::file_path_sans_ext(basename(cohortJsonFileName))
-      cohortJson <- readChar(cohortJsonFileName, file.info(
-        cohortJsonFileName)$size)
+downloadEunomiaData(overwrite = TRUE)
 
-      cohortExpression <- CirceR::cohortExpressionFromJson(cohortJson)
+con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+cdm <- cdmFromCon(con, cdmSchema = "main", writeSchema = "main")
 
-      cohortSql <- CirceR::buildCohortQuery(
-        cohortExpression,
-        options = CirceR::createGenerateOptions(generateStats = FALSE))
-    
-      cohortsToCreate <- rbind(
-        cohortsToCreate,
-        data.frame(
-          cohortId = i,
-          cohortName = cohortName,
-          sql = cohortSql,
-          stringsAsFactors = FALSE))
-    }
+cohortSet <- readCohortSet(
+  path = system.file(package = "TreatmentPatterns", "exampleCohorts")
+)
 
-    cohortTableNames <- CohortGenerator::getCohortTableNames(
-      cohortTable = cohortTable)
+cdm <- generateCohortSet(
+  cdm = cdm,
+  cohortSet = cohortSet,
+  name = "cohort_table"
+)
 
-    CohortGenerator::createCohortTables(
-      connectionDetails = connectionDetails,
-      cohortDatabaseSchema = resultSchema,
-      cohortTableNames = cohortTableNames)
+cohorts <- cohortSet \%>\%
+  # Remove 'cohort' and 'json' columns
+  select(-"cohort", -"json") \%>\%
+  mutate(type = c("event", "event", "event", "event", "exit", "event", "event", "target")) \%>\%
+  rename(
+    cohortId = "cohort_definition_id",
+    cohortName = "cohort_name",
+  )
 
-    # Generate the cohorts
-    cohortsGenerated <- CohortGenerator::generateCohortSet(
-      connectionDetails = connectionDetails,
-      cdmDatabaseSchema = cdmDatabaseSchema,
-      cohortDatabaseSchema = resultSchema,
-      cohortTableNames = cohortTableNames,
-      cohortDefinitionSet = cohortsToCreate)
-    
-    # Select Viral Sinusitis
-    targetCohorts <- cohortsGenerated \%>\%
-      filter(cohortName == "ViralSinusitis") \%>\%
-      select(cohortId, cohortName)
+outputEnv <- computePathways(
+  cohorts = cohorts,
+  cohortTableName = "cohort_table",
+  cdm = cdm
+)
 
-    # Select everything BUT Viral Sinusitis cohorts
-    eventCohorts <- cohortsGenerated \%>\%
-      filter(cohortName != "ViralSinusitis" & cohortName != "Death") \%>\%
-      select(cohortId, cohortName)
+export(
+  andromeda = outputEnv,
+  outputPath = tempdir()
+)
 
-    exitCohorts <- cohortsGenerated \%>\%
-      filter(cohortName == "Death") \%>\%
-      select(cohortId, cohortName)
-
-    cohorts <- dplyr::bind_rows(
-      targetCohorts \%>\% mutate(type = "target"),
-      eventCohorts \%>\% mutate(type = "event"),
-      exitCohorts \%>\% mutate(type = "exit")
-    )
-
-    andromeda <- computePathways(
-      cohorts = cohorts,
-      cohortTableName = cohortTable,
-      connectionDetails = connectionDetails,
-      cdmSchema = cdmDatabaseSchema,
-      resultSchema = resultSchema
-    )
-    
-    try(
-      TreatmentPatterns::export(
-        andromeda = andromeda,
-        outputPath = tempdir(),
-        ageWindow = 2,
-        minFreq = 5,
-        archiveName = "output.zip"
-      )
-    )
-  }
+Andromeda::close(outputEnv)
+DBI::dbDisconnect(con, shutdown = TRUE)
 }
 }

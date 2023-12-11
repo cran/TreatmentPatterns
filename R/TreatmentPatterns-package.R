@@ -9,7 +9,9 @@
 #' @import Andromeda
 #' @import R6
 #' @import sunburstR
-#' @import networkD3
+#' @import shiny
+#' @import shinydashboard
+#' @importFrom networkD3 sankeyNetwork
 #' @importFrom htmlwidgets JS
 #' @importFrom stats sd median
 #' @importFrom tidyr pivot_wider
@@ -20,4 +22,4 @@
 NULL
 
 # Global Variables
-utils::globalVariables(c("x", "y", "rowNumber", "path"))
+utils::globalVariables(c("x", "y", "rowNumber", "path", "personId"))

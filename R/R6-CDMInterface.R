@@ -2,6 +2,8 @@
 #'
 #' @description
 #' Abstract interface to the CDM, using CDMConnector or DatabaseConnector.
+#'
+#' @noRd
 CDMInterface <- R6::R6Class(
   classname = "CDMInterface",
   public = list(
@@ -37,14 +39,14 @@ CDMInterface <- R6::R6Class(
       self$validate()
       return(invisible(self))
     },
-
+    
     #' @description
     #' Validation method
     #'
     #' @return (`invisible(self)`)
     validate = function() {
       errorMessages <- checkmate::makeAssertCollection()
-
+      
       checkmate::assertClass(
         x = private$connectionDetails,
         "ConnectionDetails",
@@ -79,11 +81,11 @@ CDMInterface <- R6::R6Class(
         null.ok = TRUE,
         add = errorMessages
       )
-
+      
       checkmate::reportAssertions(collection = errorMessages)
       return(invisible(self))
     },
-
+    
     #' @description
     #' Fetch specified cohort IDs from a specified cohort table
     #'
@@ -97,11 +99,11 @@ CDMInterface <- R6::R6Class(
     #' @return (`data.frame`)
     fetchCohortTable = function(cohorts, cohortTableName, andromeda, andromedaTableName, minEraDuration = NULL) {
       switch(private$type,
-        CDMConnector = private$cdmconFetchCohortTable(cohorts, cohortTableName, andromeda, andromedaTableName, minEraDuration),
-        DatabaseConnector = private$dbconFetchCohortTable(cohorts, cohortTableName, andromeda, andromedaTableName, minEraDuration)
+             CDMConnector = private$cdmconFetchCohortTable(cohorts, cohortTableName, andromeda, andromedaTableName, minEraDuration),
+             DatabaseConnector = private$dbconFetchCohortTable(cohorts, cohortTableName, andromeda, andromedaTableName, minEraDuration)
       )
     },
-
+    
     #' @description
     #' Fetch metadata from CDM
     #'
@@ -110,8 +112,8 @@ CDMInterface <- R6::R6Class(
     #' @return (`invisible(NULL)`)
     fetchMetadata = function(andromeda) {
       switch(private$type,
-        CDMConnector = private$cdmconFetchMetadata(andromeda),
-        DatabaseConnector = private$dbconFetchMetadata(andromeda)
+             CDMConnector = private$cdmconFetchMetadata(andromeda),
+             DatabaseConnector = private$dbconFetchMetadata(andromeda)
       )
       return(invisible(self))
     },
@@ -120,8 +122,11 @@ CDMInterface <- R6::R6Class(
     #' Destroys instance
     #' 
     #' @return (NULL)
-    destroy = function() {
-      private$finalize()
+    disconnect = function() {
+      if (!is.null(private$connection)) {
+        DatabaseConnector::disconnect(private$connection)
+      }
+      private$cdm <- NULL
     }
   ),
   private = list(
@@ -134,12 +139,10 @@ CDMInterface <- R6::R6Class(
     tempEmulationSchema = NULL,
     cdm = NULL,
     type = "",
-
+    
     ### Methods ----
     finalize = function() {
-      if (!is.null(private$connection)) {
-        DatabaseConnector::disconnect(private$connection)
-      }
+      self$disconnect()
     },
     
     #### DatabaseConnector ----
@@ -171,10 +174,10 @@ CDMInterface <- R6::R6Class(
         andromeda = andromeda,
         andromedaTableName = andromedaTableName
       )
-
+      
       return(invisible(self))
     },
-
+    
     dbconFetchMetadata = function(andromeda) {
       renderedSql <- SqlRender::render(
         sql = "
@@ -187,12 +190,12 @@ CDMInterface <- R6::R6Class(
       ;",
         cdmSchema = private$cdmSchema
       )
-
+      
       translatedSql <- SqlRender::translate(
         sql = renderedSql,
         targetDialect = private$connection@dbms
       )
-
+      
       andromeda$metadata <- DatabaseConnector::querySql(
         connection = private$connection,
         sql = translatedSql,
@@ -232,6 +235,7 @@ CDMInterface <- R6::R6Class(
         dplyr::inner_join(
           private$cdm$concept,
           by = dplyr::join_by(gender_concept_id == concept_id)) %>%
+        dplyr::filter(!!CDMConnector::datediff("cohort_start_date", "cohort_end_date") >= minEraDuration) %>%
         dplyr::mutate(date_of_birth = as.Date(paste0(as.integer(year_of_birth), "-01-01"))) %>%
         dplyr::mutate(age = !!CDMConnector::datediff("date_of_birth", "cohort_start_date", interval = "year")) %>%
         dplyr::rename(sex = "concept_name") %>%
@@ -244,7 +248,7 @@ CDMInterface <- R6::R6Class(
           "sex")
       return(invisible(self))
     },
-
+    
     # andromeda (`Andromeda::andromeda()`)
     cdmconFetchMetadata = function(andromeda) {
       andromeda$metadata <- private$cdm$cdm_source %>%

@@ -15,14 +15,13 @@ computePathways(
   includeTreatments = "startDate",
   periodPriorToIndex = 0,
   minEraDuration = 0,
-  splitEventCohorts = "",
-  splitTime = 30,
+  splitEventCohorts = NULL,
+  splitTime = NULL,
   eraCollapseSize = 30,
   combinationWindow = 30,
   minPostCombinationDuration = 30,
   filterTreatments = "First",
-  maxPathLength = 5,
-  addNoPaths = TRUE
+  maxPathLength = 5
 )
 }
 \arguments{
@@ -51,7 +50,11 @@ Optional; In congruence with \code{connectionDetails} and \code{cdmSchema}. Igno
 
 \item{tempEmulationSchema}{Schema used to emulate temp tables}
 
-\item{includeTreatments}{(\code{character(1)}: \code{"startDate"})\cr}
+\item{includeTreatments}{(\code{character(1)}: \code{"startDate"})\cr
+\describe{
+\item{\code{"startDate"}}{Include treatments after the target cohort start date and onwards.}
+\item{\code{"endDate"}}{Include treatments before target cohort end date and before.}
+}}
 
 \item{periodPriorToIndex}{(\code{integer(1)}: \code{0})\cr
 Number of days prior to the index date of the target cohort | that event
@@ -80,15 +83,11 @@ Minimum time an event era before or after a generated combination treatment
 should last to be included in analysis}
 
 \item{filterTreatments}{(\code{character(1)}: \code{"First"} ["first", "Changes", "all"])\cr
-Select first occurrence of (‘First’); changes between (‘Changes’); or all
-event cohorts (‘All’).}
+Select first occurrence of (b
+event cohorts (b}
 
 \item{maxPathLength}{(\code{integer(1)}: \code{5})\cr
 Maximum number of steps included in treatment pathway}
-
-\item{addNoPaths}{(\code{logical(1)}: \code{TRUE})\cr
-Select to include untreated persons without treatment pathway in the
-sunburst plot}
 }
 \value{
 (\code{Andromeda::andromeda()})
@@ -101,92 +100,45 @@ specified cohorts.
 }
 \examples{
 \donttest{
-  ableToRun <- invisible(all(
-    require("Eunomia", character.only = TRUE),
-    require("CirceR", character.only = TRUE),
-    require("CohortGenerator", character.only = TRUE),
-    require("dplyr", character.only = TRUE)
-  ))
-  
-  if (ableToRun) {
-    # CohortGenerator example
-    connectionDetails <- Eunomia::getEunomiaConnectionDetails()
-    cdmDatabaseSchema <- "main"
-    resultSchema <- "main"
-    cohortTable <- "CohortTable"
+library(TreatmentPatterns)
+library(CDMConnector)
+library(dplyr)
 
-    cohortsToCreate <- CohortGenerator::createEmptyCohortDefinitionSet()
-  
-    cohortJsonFiles <- list.files(
-      system.file(
-        package = "TreatmentPatterns",
-        "exampleCohorts"),
-        full.names = TRUE)
+withr::local_envvar(
+  EUNOMIA_DATA_FOLDER = Sys.getenv("EUNOMIA_DATA_FOLDER", unset = tempfile())
+)
 
-    for (i in seq_len(length(cohortJsonFiles))) {
-      cohortJsonFileName <- cohortJsonFiles[i]
-      cohortName <- tools::file_path_sans_ext(basename(cohortJsonFileName))
-      cohortJson <- readChar(cohortJsonFileName, file.info(
-        cohortJsonFileName)$size)
+downloadEunomiaData(overwrite = TRUE)
 
-      cohortExpression <- CirceR::cohortExpressionFromJson(cohortJson)
+con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+cdm <- cdmFromCon(con, cdmSchema = "main", writeSchema = "main")
 
-      cohortSql <- CirceR::buildCohortQuery(
-        cohortExpression,
-        options = CirceR::createGenerateOptions(generateStats = FALSE))
-    
-      cohortsToCreate <- rbind(
-        cohortsToCreate,
-        data.frame(
-          cohortId = i,
-          cohortName = cohortName,
-          sql = cohortSql,
-          stringsAsFactors = FALSE))
-    }
+cohortSet <- readCohortSet(
+  path = system.file(package = "TreatmentPatterns", "exampleCohorts")
+)
 
-    cohortTableNames <- CohortGenerator::getCohortTableNames(
-      cohortTable = cohortTable)
+cdm <- generateCohortSet(
+  cdm = cdm,
+  cohortSet = cohortSet,
+  name = "cohort_table"
+)
 
-    CohortGenerator::createCohortTables(
-      connectionDetails = connectionDetails,
-      cohortDatabaseSchema = resultSchema,
-      cohortTableNames = cohortTableNames)
+cohorts <- cohortSet \%>\%
+  # Remove 'cohort' and 'json' columns
+  select(-"cohort", -"json") \%>\%
+  mutate(type = c("event", "event", "event", "event", "exit", "event", "event", "target")) \%>\%
+  rename(
+    cohortId = "cohort_definition_id",
+    cohortName = "cohort_name",
+  )
 
-    # Generate the cohorts
-    cohortsGenerated <- CohortGenerator::generateCohortSet(
-      connectionDetails = connectionDetails,
-      cdmDatabaseSchema = cdmDatabaseSchema,
-      cohortDatabaseSchema = resultSchema,
-      cohortTableNames = cohortTableNames,
-      cohortDefinitionSet = cohortsToCreate)
-    
-    # Select Viral Sinusitis
-    targetCohorts <- cohortsGenerated \%>\%
-      filter(cohortName == "ViralSinusitis") \%>\%
-      select(cohortId, cohortName)
+outputEnv <- computePathways(
+  cohorts = cohorts,
+  cohortTableName = "cohort_table",
+  cdm = cdm
+)
 
-    # Select everything BUT Viral Sinusitis cohorts
-    eventCohorts <- cohortsGenerated \%>\%
-      filter(cohortName != "ViralSinusitis" & cohortName != "Death") \%>\%
-      select(cohortId, cohortName)
-
-    exitCohorts <- cohortsGenerated \%>\%
-      filter(cohortName == "Death") \%>\%
-      select(cohortId, cohortName)
-
-    cohorts <- dplyr::bind_rows(
-      targetCohorts \%>\% mutate(type = "target"),
-      eventCohorts \%>\% mutate(type = "event"),
-      exitCohorts \%>\% mutate(type = "exit")
-    )
-
-    computePathways(
-      cohorts = cohorts,
-      cohortTableName = cohortTable,
-      connectionDetails = connectionDetails,
-      cdmSchema = cdmDatabaseSchema,
-      resultSchema = resultSchema
-    )
-  }
+Andromeda::close(outputEnv)
+DBI::dbDisconnect(con, shutdown = TRUE)
 }
 }

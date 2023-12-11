@@ -9,6 +9,20 @@ test_that("void", {
   )
 })
 
+test_that("empty treatmentHistory table", {
+  tempDirLocal <- file.path(tempdir(), "output")
+  localAndromeda <- Andromeda::andromeda()
+  
+  localAndromeda$treatmentHistory <- data.frame(
+    personId = numeric(0)
+  )
+  
+  expect_message(
+    export(localAndromeda, outputPath = tempDirLocal),
+    "Treatment History table is empty. Nothing to export."
+  )
+})
+
 # CohortGenerator ----
 test_that("outputPath", {
   skip_on_ci()
@@ -106,7 +120,7 @@ test_that("ageWindow", {
   Andromeda::close(andromeda)
 })
 
-test_that("minFreq", {
+test_that("minCellCount", {
   skip_on_ci()
   skip_on_cran()
   
@@ -127,9 +141,10 @@ test_that("minFreq", {
     export(
       andromeda = andromeda,
       outputPath = tempDirLocal,
-      minFreq = 10
+      minCellCount = 10,
+      censorType = "remove"
     ),
-    "Removed \\d+ pathways with a frequency < 10."
+    "Removing \\d+ pathways with a frequency <10."
   )
 
   treatmentPathways <- read.csv(file.path(tempDirLocal, "treatmentPathways.csv"))
@@ -141,7 +156,7 @@ test_that("minFreq", {
     export(
       andromeda = andromeda,
       outputPath = tempDirLocal,
-      minFreq = "10"
+      minCellCount = "10"
     )
   )
   
@@ -183,6 +198,79 @@ test_that("archiveName", {
       andromeda = andromeda,
       outputPath = tempDirLocal,
       archiveName = 3
+    )
+  )
+  
+  Andromeda::close(andromeda)
+})
+
+test_that("censorType", {
+  skip_on_ci()
+  skip_on_cran()
+  
+  globals <- generateCohortTableCG()
+  
+  andromeda <- TreatmentPatterns::computePathways(
+    cohorts = globals$cohorts,
+    cohortTableName = globals$cohortTableName,
+    connectionDetails = globals$connectionDetails,
+    cdmSchema = globals$cdmSchema,
+    resultSchema = globals$resultSchema
+  )
+  
+  tempDirLocal <- file.path(tempdir(), "output")
+  
+  ## "remove" ----
+  expect_message(
+    export(
+      andromeda = andromeda,
+      outputPath = tempDirLocal,
+      minCellCount = 10,
+      censorType = "remove"
+    ),
+    "Removing \\d+ pathways with a frequency <10."
+  )
+
+  treatmentPathways <- read.csv(file.path(tempDirLocal, "treatmentPathways.csv"))
+
+  expect_equal(min(treatmentPathways$freq), 10)
+
+  ## "minCellCount" ----
+  expect_message(
+    export(
+      andromeda = andromeda,
+      outputPath = tempDirLocal,
+      minCellCount = 10,
+      censorType = "minCellCount"
+    ),
+    "Censoring \\d+ pathways with a frequency <10 to 10."
+  )
+  
+  treatmentPathways <- read.csv(file.path(tempDirLocal, "treatmentPathways.csv"))
+  
+  expect_equal(min(treatmentPathways$freq), 10)
+  
+  ## "mean" ----
+  expect_message(
+    export(
+      andromeda = andromeda,
+      outputPath = tempDirLocal,
+      minCellCount = 10,
+      censorType = "mean"
+    ),
+    "Censoring \\d+ pathways with a frequency <10 to mean."
+  )
+  
+  treatmentPathways <- read.csv(file.path(tempDirLocal, "treatmentPathways.csv"))
+  
+  expect_equal(min(treatmentPathways$freq), 2)
+  
+  ## "stuff" ----
+  expect_error(
+    export(
+      andromeda = andromeda,
+      outputPath = tempDirLocal,
+      censorType = "Stuff"
     )
   )
   
@@ -281,7 +369,7 @@ test_that("ageWindow", {
   DBI::dbDisconnect(globals$con, shutdown = TRUE)
 })
 
-test_that("minFreq", {
+test_that("minCellCount", {
   skip_on_cran()
   
   globals <- generateCohortTableCDMC()
@@ -299,9 +387,10 @@ test_that("minFreq", {
     export(
       andromeda = andromeda,
       outputPath = tempDirLocal,
-      minFreq = 10
+      minCellCount = 10,
+      censorType = "remove"
     ),
-    "Removed \\d+ pathways with a frequency < 10."
+    "Removing \\d+ pathways with a frequency <10."
   )
 
   treatmentPathways <- read.csv(file.path(tempDirLocal, "treatmentPathways.csv"))
@@ -313,7 +402,7 @@ test_that("minFreq", {
     export(
       andromeda = andromeda,
       outputPath = tempDirLocal,
-      minFreq = "10"
+      minCellCount = "10"
     )
   )
   
@@ -353,6 +442,77 @@ test_that("archiveName", {
       andromeda = andromeda,
       outputPath = tempDirLocal,
       archiveName = 3
+    )
+  )
+  
+  Andromeda::close(andromeda)
+  DBI::dbDisconnect(globals$con, shutdown = TRUE)
+})
+
+test_that("censorType", {
+  skip_on_cran()
+  
+  globals <- generateCohortTableCDMC()
+  
+  andromeda <- TreatmentPatterns::computePathways(
+    cohorts = globals$cohorts,
+    cohortTableName = globals$cohortTableName,
+    cdm = globals$cdm
+  )
+  
+  tempDirLocal <- file.path(tempdir(), "output")
+  
+  ## "remove" ----
+  expect_message(
+    export(
+      andromeda = andromeda,
+      outputPath = tempDirLocal,
+      minCellCount = 10,
+      censorType = "remove"
+    ),
+    "Removing \\d+ pathways with a frequency <10."
+  )
+  
+  treatmentPathways <- read.csv(file.path(tempDirLocal, "treatmentPathways.csv"))
+  
+  expect_equal(min(treatmentPathways$freq), 10)
+  
+  ## "minCellCount" ----
+  expect_message(
+    export(
+      andromeda = andromeda,
+      outputPath = tempDirLocal,
+      minCellCount = 10,
+      censorType = "minCellCount"
+    ),
+    "Censoring \\d+ pathways with a frequency <10 to 10."
+  )
+  
+  treatmentPathways <- read.csv(file.path(tempDirLocal, "treatmentPathways.csv"))
+  
+  expect_equal(min(treatmentPathways$freq), 10)
+  
+  ## "mean" ----
+  expect_message(
+    export(
+      andromeda = andromeda,
+      outputPath = tempDirLocal,
+      minCellCount = 10,
+      censorType = "mean"
+    ),
+    "Censoring \\d+ pathways with a frequency <10 to mean."
+  )
+  
+  treatmentPathways <- read.csv(file.path(tempDirLocal, "treatmentPathways.csv"))
+  
+  expect_equal(min(treatmentPathways$freq), 2)
+  
+  ## "stuff" ----
+  expect_error(
+    export(
+      andromeda = andromeda,
+      outputPath = tempDirLocal,
+      censorType = "Stuff"
     )
   )
   

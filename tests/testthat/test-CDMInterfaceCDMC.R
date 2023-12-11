@@ -42,6 +42,12 @@ test_that("Method: new", {
   ))
 })
 
+test_that("Method: new - empty", {
+  expect_error(
+    TreatmentPatterns:::CDMInterface$new(),
+    "Could not assert if CDMConnector or DatabaseConnector is being used.")
+})
+
 test_that("Method: validate", {
   expect_true(R6::is.R6(cdmInterface$validate()))
 })

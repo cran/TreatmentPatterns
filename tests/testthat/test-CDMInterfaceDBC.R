@@ -65,87 +65,79 @@ test_that("Method: fetchMetadata", {
 
 test_that("Method: fetchCohortTable", {
   skip_on_cran()
-  skip_on_ci()
+  # skip_on_ci()
   
-  connectionDetails <- Eunomia::getEunomiaConnectionDetails()
-  cohortTableName <- "cohort_table"
-  andromedaTableName <- "cohortTable"
-  cdmSchema <- "main"
-  resultSchema <- "main"
-  
-  connection <- DatabaseConnector::connect(connectionDetails)
-  
-  DatabaseConnector::renderTranslateExecuteSql(
-    connection = connection,
-    sql = "
-  DROP TABLE IF EXISTS cohort_table;
-
-  CREATE TABLE cohort_table (
-    cohort_definition_id INT,
-    subject_id INT,
-    cohort_start_date DATE,
-    cohort_end_date DATE
-  );
-
-  INSERT INTO cohort_table (
-    cohort_definition_id,
-    subject_id,
-    cohort_start_date,
-    cohort_end_date
-  ) VALUES
-  (3, 1, 2014-10-10, 2015-08-01),
-  (2, 1, 2014-11-17, 2014-12-04),
-  (1, 1, 2014-10-10, 2015-08-01);
-  "
-  )
-  
-  DatabaseConnector::disconnect(connection)
+  globals <- generateCohortTableCG()
   
   andromeda <- Andromeda::andromeda()
+  andromedaTableName <- "cohortTable"
   
   cdmInterface <- TreatmentPatterns:::CDMInterface$new(
-    connectionDetails = connectionDetails,
-    cdmSchema = cdmSchema,
-    resultSchema = resultSchema
+    connectionDetails = globals$connectionDetails,
+    cdmSchema = globals$cdmSchema,
+    resultSchema = globals$resultSchema
   )
 
-  cohorts <- data.frame(
-    cohortId = c(1, 2, 3),
-    cohortName = c("Disease X", "Drug A", "Drug B"),
-    type = c("target", "event", "event")
-  )
-
-  # Viral Sinusitis
   cdmInterface$fetchCohortTable(
-    cohorts = cohorts,
-    cohortTableName = cohortTableName,
+    cohorts = globals$cohorts,
+    cohortTableName = globals$cohortTableName,
     andromeda = andromeda,
     andromedaTableName = andromedaTableName,
     minEraDuration = 0
   )
 
-  res <- andromeda[[andromedaTableName]] %>% dplyr::collect()
+  expect_equal(names(andromeda), andromedaTableName)
+})
 
-  expect_identical(ncol(res), 6L)
-  expect_identical(nrow(res), 3L)
-
+test_that("fetchCohortTable: empty", {
+  skip_on_cran()
+  # skip_on_ci()
+  
+  globals <- generateCohortTableCG()
+  
+  andromeda <- Andromeda::andromeda()
+  andromedaTableName <- "cohortTable"
+  
+  cdmInterface <- TreatmentPatterns:::CDMInterface$new(
+    connectionDetails = globals$connectionDetails,
+    cdmSchema = globals$cdmSchema,
+    resultSchema = globals$resultSchema
+  )
+  
+  cohorts <- data.frame(
+    cohortId = numeric(),
+    cohortName = character(),
+    type = character()
+  )
+  
   # Empty
   cdmInterface$fetchCohortTable(
-    cohorts = data.frame(
-      cohortId = numeric(),
-      cohortName = character(),
-      type = character()
-    ),
-    cohortTableName = "cohort_table",
+    cohorts = cohorts,
+    cohortTableName = globals$cohortTableName,
     andromeda = andromeda,
-    andromedaTableName = "cohortTable",
+    andromedaTableName = andromedaTableName,
     minEraDuration = 5
   )
-
+  
   res <- andromeda[[andromedaTableName]] %>% dplyr::collect()
-
+  
   expect_identical(ncol(res), 6L)
   expect_identical(nrow(res), 0L)
+})
+
+test_that("Method: disconnect", {
+  skip_on_cran()
+  connectionDetails <- Eunomia::getEunomiaConnectionDetails()
   
-  cdmInterface$destroy()
+  cdmInterface <- TreatmentPatterns:::CDMInterface$new(
+    connectionDetails = connectionDetails,
+    cdmSchema = "main",
+    resultSchema = "main"
+  )
+  
+  andromeda <- Andromeda::andromeda()
+
+  cdmInterface$disconnect()
+  
+  expect_error(cdmInterface$fetchMetadata(andromeda))
 })

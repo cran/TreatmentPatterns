@@ -84,7 +84,7 @@ test_that("default depth: 3", {
   )
 })
 
-test_that("minFreq", {
+test_that("minCellCount", {
   data <- dummyData %>%
     filter(.data$index_year == "all")
 
@@ -92,7 +92,7 @@ test_that("minFreq", {
     createSankeyDiagram(
       treatmentPathways = data,
       outputFile = tempFile,
-      minFreq = 20
+      minCellCount = 20
     )
   )
 
@@ -119,4 +119,17 @@ test_that("groupCombinations: TRUE", {
   json <- fetchJson(tempFile)
 
   expect_true(all(unlist(json[5]) == c("1.Combination", "2.Stopped", "25")))
+})
+
+test_that("returnHTML: TRUE", {
+  html <- createSankeyDiagram(
+      treatmentPathways = dummyData,
+      outputFile = tempFile,
+      groupCombinations = TRUE,
+      returnHTML = TRUE
+    )
+  
+  expect_identical(html$type, "Sankey")
+  expect_identical(html$chartid, 1)
+  expect_equal(names(html$html), c("header", "chart", "caption", "footer"))
 })

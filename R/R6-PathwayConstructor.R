@@ -2,6 +2,8 @@
 #'
 #' @description
 #' PathwayConstructor R6 object.
+#'
+#' @noRd
 PathwayConstructor <- R6::R6Class(
   classname = "PathwayConstructor",
   public = list(
@@ -39,17 +41,17 @@ PathwayConstructor <- R6::R6Class(
         select("cohortId") %>%
         pull() %>%
         paste(collapse = ",")
-
+      
       return(invisible(self))
     },
-
+    
     #' @description
     #' Validation method
     #'
     #' @return (`invisible(self)`)
     validate = function() {
       private$cdmInterface$validate()
-
+      
       errorMessages <- checkmate::makeAssertCollection()
       
       checkmate::assertCharacter(
@@ -81,18 +83,16 @@ PathwayConstructor <- R6::R6Class(
         add = errorMessages
       )
       
-      checkmate::assertCharacter(
+      checkmate::assertIntegerish(
         x = private$settings$splitEventCohorts,
-        len = 1,
+        null.ok = TRUE,
         add = errorMessages
       )
       
-      checkmate::assertNumeric(
+      checkmate::assertIntegerish(
         x = private$settings$splitTime,
         lower = 0,
-        finite = TRUE,
-        len = 1,
-        null.ok = FALSE,
+        null.ok = TRUE,
         add = errorMessages
       )
       
@@ -145,13 +145,6 @@ PathwayConstructor <- R6::R6Class(
         add = errorMessages
       )
       
-      checkmate::assertLogical(
-        x = private$settings$addNoPaths,
-        any.missing = FALSE,
-        len = 1,
-        add = errorMessages
-      )
-      
       checkmate::assertDataFrame(
         x = private$cohorts,
         types = c("integerish", "character", "character"),
@@ -179,29 +172,27 @@ PathwayConstructor <- R6::R6Class(
         x = private$cohortTableName,
         len = 1, null.ok = FALSE
       )
-
+      
       checkmate::reportAssertions(collection = errorMessages)
       return(invisible(self))
     },
-
+    
     #' @description
     #' Construct the pathways. Generates `Andromeda::andromeda()` objects,
     #' which can be fetched using `self$getAndromeda()`.
-    #' 
-    #' @template param_minEraDuration
-    construct = function(minEraDuration) {
+    construct = function() {
       # Set up Andromeda sqlite environment
       private$andromeda <- Andromeda::andromeda()
       private$cdmInterface$fetchMetadata(private$andromeda)
-
+      
       private$cdmInterface$fetchCohortTable(
         cohorts = private$cohorts,
         cohortTableName = private$cohortTableName,
         andromeda = private$andromeda,
         andromedaTableName = "cohortTable",
-        minEraDuration = minEraDuration
+        minEraDuration = private$settings$minEraDuration
       )
-
+      
       private$andromeda$cohortTable <- private$andromeda$cohortTable %>%
         dplyr::rename(
           cohortId = "cohort_definition_id",
@@ -209,7 +200,7 @@ PathwayConstructor <- R6::R6Class(
           startDate = "cohort_start_date",
           endDate = "cohort_end_date"
         )
-
+      
       private$andromeda <- constructPathways(
         settings = private$settings,
         cohorts = private$cohorts,
@@ -217,7 +208,7 @@ PathwayConstructor <- R6::R6Class(
       )
       return(invisible(self))
     },
-
+    
     #' @description
     #' Gets the `Andromeda::andromeda()` objects in a list.
     #'
@@ -225,8 +216,8 @@ PathwayConstructor <- R6::R6Class(
     getAndromeda = function() {
       return(private$andromeda)
     },
-
-
+    
+    
     #' @description
     #' Edit settings
     #'
@@ -240,21 +231,19 @@ PathwayConstructor <- R6::R6Class(
     #' @template param_minPostCombinationDuration
     #' @template param_filterTreatments
     #' @template param_maxPathLength
-    #' @template param_addNoPaths
     #'
     #' @return (`data.frame()`)
     editSettings = function(
-        includeTreatments = "startDate",
-        periodPriorToIndex = 0,
-        minEraDuration = 0,
-        splitEventCohorts = "",
-        splitTime = 30,
-        eraCollapseSize = 30,
-        combinationWindow = 30,
-        minPostCombinationDuration = 30,
-        filterTreatments = "First",
-        maxPathLength = 5,
-        addNoPaths = TRUE) {
+    includeTreatments = "startDate",
+    periodPriorToIndex = 0,
+    minEraDuration = 0,
+    splitEventCohorts = NULL,
+    splitTime = NULL,
+    eraCollapseSize = 30,
+    combinationWindow = 30,
+    minPostCombinationDuration = 30,
+    filterTreatments = "First",
+    maxPathLength = 5) {
       settings <- mget(
         x = names(formals()),
         envir = sys.frame(
@@ -264,7 +253,7 @@ PathwayConstructor <- R6::R6Class(
       private$settings <- utils::modifyList(private$settings, settings)
       self$validate()
     },
-
+    
     #' @description
     #' Getter method to get the specified settings
     #'
@@ -287,14 +276,13 @@ PathwayConstructor <- R6::R6Class(
       includeTreatments = "startDate",
       periodPriorToIndex = 0,
       minEraDuration = 0,
-      splitEventCohorts = "",
-      splitTime = 30,
+      splitEventCohorts = NULL,
+      splitTime = NULL,
       eraCollapseSize = 30,
       combinationWindow = 30,
       minPostCombinationDuration = 30,
       filterTreatments = "First",
-      maxPathLength = 5,
-      addNoPaths = TRUE
+      maxPathLength = 5
     )
   )
 )

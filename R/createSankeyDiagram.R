@@ -6,7 +6,7 @@
 #' @template param_outputFile
 #' @template param_returnHTML
 #' @template param_groupCombinations
-#' @template param_minFreq
+#' @template param_minCellCount
 #'
 #' @export
 #'
@@ -31,14 +31,14 @@
 #'   treatmentPathways,
 #'   outputFile,
 #'   groupCombinations = FALSE,
-#'   minFreq = 5
+#'   minCellCount = 5
 #' )
 createSankeyDiagram <- function(
     treatmentPathways,
     outputFile,
     returnHTML = FALSE,
     groupCombinations = FALSE,
-    minFreq = 5) {
+    minCellCount = 5) {
   
   treatmentPathways <- doGroupCombinations(
     treatmentPathways = treatmentPathways,
@@ -46,7 +46,7 @@ createSankeyDiagram <- function(
   )
   
   data <- treatmentPathways %>%
-    rowwise() %>%
+    dplyr::rowwise() %>%
     dplyr::mutate(path = stringr::str_split(.data$path, pattern = "-")) %>%
     dplyr::mutate(freq = as.integer(.data$freq))
 
@@ -82,7 +82,7 @@ createSankeyDiagram <- function(
   }
 
   links <- links %>%
-    dplyr::filter(.data$freq >= minFreq) %>%
+    dplyr::filter(.data$freq >= minCellCount) %>%
     dplyr::mutate(`%` = round(freq / sum(freq) * 100, 2)) %>%
     dplyr::select(-"freq")
   
@@ -222,6 +222,7 @@ getColorPalette <- function(treatmentPathways) {
 #' @template param_treatmentPathways
 #' @template param_groupCombinations
 #' @param colors (`character(n)`) Vector of hex color codes.
+#' @param ... Paramaters for \link[networkD3]{sankeyNetwork}.
 #'
 #' @return (`htmlwidget`)
 #' @export
@@ -238,7 +239,7 @@ getColorPalette <- function(treatmentPathways) {
 #' )
 #' 
 #' createSankeyDiagram2(treatmentPathways)
-createSankeyDiagram2 <- function(treatmentPathways, groupCombinations = FALSE, colors = NULL) {
+createSankeyDiagram2 <- function(treatmentPathways, groupCombinations = FALSE, colors = NULL, ...) {
   treatmentPathways <- doGroupCombinations(
     treatmentPathways = treatmentPathways,
     groupCombinations = groupCombinations
@@ -264,7 +265,6 @@ createSankeyDiagram2 <- function(treatmentPathways, groupCombinations = FALSE, c
     NodeID = "names",
     units = "%",
     colourScale = colors,
-    fontSize = 12,
-    nodeWidth = 30
+    ...
   )
 }

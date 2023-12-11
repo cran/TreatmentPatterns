@@ -9,7 +9,7 @@ createSankeyDiagram(
   outputFile,
   returnHTML = FALSE,
   groupCombinations = FALSE,
-  minFreq = 5
+  minCellCount = 5
 )
 }
 \arguments{
@@ -32,8 +32,8 @@ Logical to return HTML or not.
 \item{\code{FALSE}}{Do not group combination treatments.}
 }}
 
-\item{minFreq}{(\code{integer(1)}: \code{5})\cr
-Minimum frequency required per pathway. Censors data below \code{x} as \verb{<x}. This
+\item{minCellCount}{(\code{integer(1)}: \code{5})\cr
+Minimum count required per pathway. Censors data below \code{x} as \verb{<x}. This
 minimum value will carry over to the sankey diagram and sunburst plot.}
 }
 \value{
@@ -61,6 +61,6 @@ createSankeyDiagram(
   treatmentPathways,
   outputFile,
   groupCombinations = FALSE,
-  minFreq = 5
+  minCellCount = 5
 )
 }
