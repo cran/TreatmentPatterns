@@ -172,7 +172,7 @@ InteractivePlots <- R6::R6Class(
                 try({
                   shiny::tagList(
                     shiny::h3(name),
-                    TreatmentPatterns::createSankeyDiagram2(
+                    TreatmentPatterns::createSankeyDiagram(
                       treatmentPathways = data$treatmentPathways %>%
                         dplyr::filter(.data$db == name)
                     )
@@ -204,7 +204,7 @@ InteractivePlots <- R6::R6Class(
               try({
                 shiny::tagList(
                   shiny::h3(name),
-                  TreatmentPatterns::createSunburstPlot2(
+                  TreatmentPatterns::createSunburstPlot(
                     treatmentPathways = data$treatmentPathways %>%
                       dplyr::filter(.data$db == name),
                     colors = data$labels,

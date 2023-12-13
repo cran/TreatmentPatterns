@@ -26,43 +26,44 @@
 #' library(TreatmentPatterns)
 #' library(CDMConnector)
 #' library(dplyr)
-#'
-#' withr::local_envvar(
-#'   EUNOMIA_DATA_FOLDER = Sys.getenv("EUNOMIA_DATA_FOLDER", unset = tempfile())
-#' )
-#'
-#' downloadEunomiaData(overwrite = TRUE)
-#'
-#' con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
-#' cdm <- cdmFromCon(con, cdmSchema = "main", writeSchema = "main")
-#'
-#' cohortSet <- readCohortSet(
-#'   path = system.file(package = "TreatmentPatterns", "exampleCohorts")
-#' )
-#'
-#' cdm <- generateCohortSet(
-#'   cdm = cdm,
-#'   cohortSet = cohortSet,
-#'   name = "cohort_table"
-#' )
-#'
-#' cohorts <- cohortSet %>%
-#'   # Remove 'cohort' and 'json' columns
-#'   select(-"cohort", -"json") %>%
-#'   mutate(type = c("event", "event", "event", "event", "exit", "event", "event", "target")) %>%
-#'   rename(
-#'     cohortId = "cohort_definition_id",
-#'     cohortName = "cohort_name",
+#' if (require("CirceR", character.only = TRUE, quietly = TRUE)) {
+#'   withr::local_envvar(
+#'     EUNOMIA_DATA_FOLDER = Sys.getenv("EUNOMIA_DATA_FOLDER", unset = tempfile())
 #'   )
 #'
-#' executeTreatmentPatterns(
-#'   cohorts = cohorts,
-#'   cohortTableName = "cohort_table",
-#'   cdm = cdm,
-#'   outputPath = tempdir()
-#' )
+#'   downloadEunomiaData(overwrite = TRUE)
+#'
+#'   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+#'   cdm <- cdmFromCon(con, cdmSchema = "main", writeSchema = "main")
+#'
+#'   cohortSet <- readCohortSet(
+#'     path = system.file(package = "TreatmentPatterns", "exampleCohorts")
+#'   )
+#'
+#'   cdm <- generateCohortSet(
+#'     cdm = cdm,
+#'     cohortSet = cohortSet,
+#'     name = "cohort_table"
+#'   )
+#'
+#'   cohorts <- cohortSet %>%
+#'     # Remove 'cohort' and 'json' columns
+#'     select(-"cohort", -"json") %>%
+#'     mutate(type = c("event", "event", "event", "event", "exit", "event", "event", "target")) %>%
+#'     rename(
+#'       cohortId = "cohort_definition_id",
+#'       cohortName = "cohort_name",
+#'     )
+#'
+#'   executeTreatmentPatterns(
+#'     cohorts = cohorts,
+#'     cohortTableName = "cohort_table",
+#'     cdm = cdm,
+#'     outputPath = tempdir()
+#'   )
 #'     
-#' DBI::dbDisconnect(con, shutdown = TRUE)
+#'   DBI::dbDisconnect(con, shutdown = TRUE)
+#' }
 #' }
 executeTreatmentPatterns <- function(
     cohorts,

@@ -4,19 +4,11 @@
 \alias{createSunburstPlot}
 \title{createSunburstPlot}
 \usage{
-createSunburstPlot(
-  treatmentPathways,
-  outputFile,
-  groupCombinations = FALSE,
-  returnHTML = FALSE
-)
+createSunburstPlot(treatmentPathways, groupCombinations = FALSE, ...)
 }
 \arguments{
 \item{treatmentPathways}{(\code{data.frame()})\cr
 The contents of the treatmentPathways.csv-file as a data.frame().}
-
-\item{outputFile}{(\code{character(1)})\cr
-Path where the Sankey diagram should be written to.}
 
 \item{groupCombinations}{(\code{logical(1)}: \code{FALSE})\cr
 \describe{
@@ -24,22 +16,15 @@ Path where the Sankey diagram should be written to.}
 \item{\code{FALSE}}{Do not group combination treatments.}
 }}
 
-\item{returnHTML}{(\code{logical(1)}: \code{FALSE})\cr
-Logical to return HTML or not.
-\describe{
-\item{\code{TRUE}}{Returns HTML as \code{character(n)}, does not requie \code{outputPath} to be specified.}
-\item{\code{FALSE}}{Returns \code{NULL}, but writes the HTML to the specified file instead. Requires \code{outputPath} to be specified.}
-}}
+\item{...}{Paramaters for \link[sunburstR]{sunburst}.}
 }
 \value{
-(\code{NULL})
+(\code{htmlwidget})
 }
 \description{
-Generate a sunburst plot from the treatment pathways.
+New sunburstPlot function
 }
 \examples{
-# treatmentPathways <- read.csv("treatmentPathways.csv")
-
 # Dummy data, typically read from treatmentPathways.csv
 treatmentPatwhays <- data.frame(
   path = c("Acetaminophen", "Acetaminophen-Amoxicillin+Clavulanate",
@@ -50,10 +35,5 @@ treatmentPatwhays <- data.frame(
   index_year = rep("all", 5)
 )
 
-outputFile <- tempfile(pattern = "mySunburstPlot", fileext = "html")
-
-createSunburstPlot(
-  treatmentPatwhays,
-  outputFile
-)
+createSunburstPlot(treatmentPatwhays)
 }

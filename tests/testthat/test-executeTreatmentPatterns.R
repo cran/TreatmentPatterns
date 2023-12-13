@@ -62,7 +62,7 @@ test_that("CDMConnector", {
   )
 
   expect_true(
-    file.exists(file.path(tempDir, "summaryStatsTherapyDuraion.csv"))
+    file.exists(file.path(tempDir, "summaryStatsTherapyDuration.csv"))
   )
 
   expect_true(

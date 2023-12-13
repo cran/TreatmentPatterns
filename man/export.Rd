@@ -28,9 +28,9 @@ minimum value will carry over to the sankey diagram and sunburst plot.}
 
 \item{censorType}{(\code{character(1)})\cr
 \describe{
-\item{\code{"cellCount"}}{Censors pathways <\code{cellCount} to \code{cellCount}.}
-\item{\code{"remove"}}{Censors pathways <\code{cellCount} by removing them completely.}
-\item{\code{"mean"}}{Censors pathways <\code{cellCount} to the mean of all frequencies below \code{cellCount}}
+\item{\code{"minCellCount"}}{Censors pathways <\code{minCellCount} to \code{minCellCount}.}
+\item{\code{"remove"}}{Censors pathways <\code{minCellCount} by removing them completely.}
+\item{\code{"mean"}}{Censors pathways <\code{minCellCount} to the mean of all frequencies below \code{minCellCount}}
 }}
 
 \item{archiveName}{(\code{character(1)}: \code{NULL})\cr
@@ -49,46 +49,48 @@ library(TreatmentPatterns)
 library(CDMConnector)
 library(dplyr)
 
-withr::local_envvar(
-  EUNOMIA_DATA_FOLDER = Sys.getenv("EUNOMIA_DATA_FOLDER", unset = tempfile())
-)
-
-downloadEunomiaData(overwrite = TRUE)
-
-con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
-cdm <- cdmFromCon(con, cdmSchema = "main", writeSchema = "main")
-
-cohortSet <- readCohortSet(
-  path = system.file(package = "TreatmentPatterns", "exampleCohorts")
-)
-
-cdm <- generateCohortSet(
-  cdm = cdm,
-  cohortSet = cohortSet,
-  name = "cohort_table"
-)
-
-cohorts <- cohortSet \%>\%
-  # Remove 'cohort' and 'json' columns
-  select(-"cohort", -"json") \%>\%
-  mutate(type = c("event", "event", "event", "event", "exit", "event", "event", "target")) \%>\%
-  rename(
-    cohortId = "cohort_definition_id",
-    cohortName = "cohort_name",
+if (require("CirceR", character.only = TRUE, quietly = TRUE)) {
+  withr::local_envvar(
+    EUNOMIA_DATA_FOLDER = Sys.getenv("EUNOMIA_DATA_FOLDER", unset = tempfile())
   )
 
-outputEnv <- computePathways(
-  cohorts = cohorts,
-  cohortTableName = "cohort_table",
-  cdm = cdm
-)
+  downloadEunomiaData(overwrite = TRUE)
 
-export(
-  andromeda = outputEnv,
-  outputPath = tempdir()
-)
+  con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  cdm <- cdmFromCon(con, cdmSchema = "main", writeSchema = "main")
 
-Andromeda::close(outputEnv)
-DBI::dbDisconnect(con, shutdown = TRUE)
+  cohortSet <- readCohortSet(
+    path = system.file(package = "TreatmentPatterns", "exampleCohorts")
+  )
+
+  cdm <- generateCohortSet(
+    cdm = cdm,
+    cohortSet = cohortSet,
+    name = "cohort_table"
+  )
+
+  cohorts <- cohortSet \%>\%
+    # Remove 'cohort' and 'json' columns
+    select(-"cohort", -"json") \%>\%
+    mutate(type = c("event", "event", "event", "event", "exit", "event", "event", "target")) \%>\%
+    rename(
+      cohortId = "cohort_definition_id",
+      cohortName = "cohort_name",
+    )
+
+  outputEnv <- computePathways(
+    cohorts = cohorts,
+    cohortTableName = "cohort_table",
+    cdm = cdm
+  )
+
+  export(
+    andromeda = outputEnv,
+    outputPath = tempdir()
+  )
+
+  Andromeda::close(outputEnv)
+  DBI::dbDisconnect(con, shutdown = TRUE)
+}
 }
 }

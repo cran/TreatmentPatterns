@@ -47,7 +47,7 @@ test_that("outputPath", {
   )
 
   expect_true(
-    file.exists(file.path(tempDirLocal, "summaryStatsTherapyDuraion.csv"))
+    file.exists(file.path(tempDirLocal, "summaryStatsTherapyDuration.csv"))
   )
 
   expect_true(
@@ -298,7 +298,7 @@ test_that("outputPath", {
   )
 
   expect_true(
-    file.exists(file.path(tempDirLocal, "summaryStatsTherapyDuraion.csv"))
+    file.exists(file.path(tempDirLocal, "summaryStatsTherapyDuration.csv"))
   )
 
   expect_true(

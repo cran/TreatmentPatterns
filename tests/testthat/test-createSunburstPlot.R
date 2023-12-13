@@ -1,7 +1,6 @@
-library(TreatmentPatterns)
 library(testthat)
+library(TreatmentPatterns)
 
-# General variables ----
 dummyData <- data.frame(
   path = c("A+Z", "B", "C", "A-B", "B-C", "D+Z", "E", "F", "D-E", "D-E-F"),
   freq = c(25, 25, 25, 12, 13, 25, 25, 25, 12, 13),
@@ -10,45 +9,27 @@ dummyData <- data.frame(
   index_year = c(rep("all", 5), rep("2020", 5))
 )
 
-tempFile <- file.path(tempdir(), "sunburst.html")
-
-test_that("void", {
-  expect_error(
-    createSunburstPlot()
-  )
-})
-
-test_that("no outputFile", {
-  expect_error(
-    createSunburstPlot(dummyData),
-    "argument \"outputFile\" is missing, with no default"
-  )
-})
-
-test_that("no data", {
-  expect_error(
-    createSunburstPlot(outputFile = tempFile),
-    "argument \"treatmentPathways\" is missing, with no default"
-  )
-})
 
 test_that("minimal", {
-  createSunburstPlot(dummyData, tempFile)
+  p <- createSunburstPlot(treatmentPathways = dummyData)
+  expect_s3_class(p$x$data, "json")
+})
 
-  lines <- readLines(tempFile)
-  json <- lines[grep("<textarea  id=\"chartData\" style=\"visibility:hidden; width:\\d+px; height:\\d+px\">", lines) + 1]
-  res <- rjson::fromJSON(json)
+test_that("groupCombinations: TRUE", {
+  p <- createSunburstPlot(
+    treatmentPathways = dummyData,
+    groupCombinations = TRUE
+  )
+  
+  expect_s3_class(p$x$data, "json")
+})
 
-  expect_identical(length(res$data$children), 8L)
-  expect_identical(length(res$data), 2L)
-  expect_identical(length(res$lookup), 9L)
+test_that("colors", {
+  actualColors <- c("#ff33cc", "#ff0000", "#00ff00", "#0000ff", "#ffffff", "#000000")
   
-  # Total freq
-  splitJson <- unlist(stringr::str_split(json, pattern = ","))
-  sizes <- splitJson[grep("size", splitJson)]
+  p <- createSunburstPlot(treatmentPathways = dummyData, colors = actualColors)
   
-  expectedSumFreq <- sum(dummyData$freq)
-  actualSumFreq <- sum(as.numeric(stringr::str_extract_all(sizes, "\\d+")))
+  pColors <- p$x$options$colors
   
-  expect_equal(expectedSumFreq, actualSumFreq)
+  expect_identical(pColors, actualColors)
 })

@@ -24,7 +24,7 @@ test_that("computePathways DatabaseConnector", {
       ),
       "After combinationWindow: 555"
     ),
-    "Original number of rows: 8334"
+    "Original number of rows: 8352"
   )
 })
 
@@ -35,12 +35,18 @@ test_that("computePathways CDMConnector", {
   globals <- generateCohortTableCDMC()
   
   expect_message(
-    computePathways(
-      cdm = globals$cdm,
-      cohorts = globals$cohorts,
-      cohortTableName = globals$cohortTableName
+    expect_message(
+      expect_message(
+        computePathways(
+          cdm = globals$cdm,
+          cohorts = globals$cohorts,
+          cohortTableName = globals$cohortTableName
+        ),
+        "After maxPathLength: 554"
+      ),
+      "After combinationWindow: 555"
     ),
-    "After maxPathLength: 554"
+    "Original number of rows: 8352"
   )
   
   DBI::dbDisconnect(globals$con, shutdown = TRUE)

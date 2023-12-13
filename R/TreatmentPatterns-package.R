@@ -22,4 +22,13 @@
 NULL
 
 # Global Variables
-utils::globalVariables(c("x", "y", "rowNumber", "path", "personId"))
+utils::globalVariables(
+  c(
+    "x",
+    "y",
+    "rowNumber",
+    "path",
+    "personId",
+    "freq"
+  )
+)

@@ -6,25 +6,14 @@
 \usage{
 createSankeyDiagram(
   treatmentPathways,
-  outputFile,
-  returnHTML = FALSE,
   groupCombinations = FALSE,
-  minCellCount = 5
+  colors = NULL,
+  ...
 )
 }
 \arguments{
 \item{treatmentPathways}{(\code{data.frame()})\cr
 The contents of the treatmentPathways.csv-file as a data.frame().}
-
-\item{outputFile}{(\code{character(1)})\cr
-Path where the Sankey diagram should be written to.}
-
-\item{returnHTML}{(\code{logical(1)}: \code{FALSE})\cr
-Logical to return HTML or not.
-\describe{
-\item{\code{TRUE}}{Returns HTML as \code{character(n)}, does not requie \code{outputPath} to be specified.}
-\item{\code{FALSE}}{Returns \code{NULL}, but writes the HTML to the specified file instead. Requires \code{outputPath} to be specified.}
-}}
 
 \item{groupCombinations}{(\code{logical(1)}: \code{FALSE})\cr
 \describe{
@@ -32,19 +21,17 @@ Logical to return HTML or not.
 \item{\code{FALSE}}{Do not group combination treatments.}
 }}
 
-\item{minCellCount}{(\code{integer(1)}: \code{5})\cr
-Minimum count required per pathway. Censors data below \code{x} as \verb{<x}. This
-minimum value will carry over to the sankey diagram and sunburst plot.}
+\item{colors}{(\code{character(n)}) Vector of hex color codes.}
+
+\item{...}{Paramaters for \link[networkD3]{sankeyNetwork}.}
 }
 \value{
-invisible(NULL)
+(\code{htmlwidget})
 }
 \description{
-Writes the Sankey diagram to a HTML-file, to a specified file path.
+Create sankey diagram, will replace \code{createSankeyDiagram}.
 }
 \examples{
-# treatmentPathways <- read.csv(treatmentPathways.csv)
-
 # Dummy data, typically read from treatmentPathways.csv
 treatmentPathways <- data.frame(
   path = c("Acetaminophen", "Acetaminophen-Amoxicillin+Clavulanate",
@@ -55,12 +42,5 @@ treatmentPathways <- data.frame(
   index_year = rep("all", 5)
 )
 
-outputFile <- tempfile(pattern = "mySankeyDiagram", fileext = "html")
-
-createSankeyDiagram(
-  treatmentPathways,
-  outputFile,
-  groupCombinations = FALSE,
-  minCellCount = 5
-)
+createSankeyDiagram(treatmentPathways)
 }

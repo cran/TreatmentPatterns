@@ -32,43 +32,45 @@
 #' library(TreatmentPatterns)
 #' library(CDMConnector)
 #' library(dplyr)
-#'
-#' withr::local_envvar(
-#'   EUNOMIA_DATA_FOLDER = Sys.getenv("EUNOMIA_DATA_FOLDER", unset = tempfile())
-#' )
-#'
-#' downloadEunomiaData(overwrite = TRUE)
-#'
-#' con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
-#' cdm <- cdmFromCon(con, cdmSchema = "main", writeSchema = "main")
-#'
-#' cohortSet <- readCohortSet(
-#'   path = system.file(package = "TreatmentPatterns", "exampleCohorts")
-#' )
-#'
-#' cdm <- generateCohortSet(
-#'   cdm = cdm,
-#'   cohortSet = cohortSet,
-#'   name = "cohort_table"
-#' )
-#'
-#' cohorts <- cohortSet %>%
-#'   # Remove 'cohort' and 'json' columns
-#'   select(-"cohort", -"json") %>%
-#'   mutate(type = c("event", "event", "event", "event", "exit", "event", "event", "target")) %>%
-#'   rename(
-#'     cohortId = "cohort_definition_id",
-#'     cohortName = "cohort_name",
+#' 
+#' if (require("CirceR", character.only = TRUE, quietly = TRUE)) {
+#'   withr::local_envvar(
+#'     EUNOMIA_DATA_FOLDER = Sys.getenv("EUNOMIA_DATA_FOLDER", unset = tempfile())
 #'   )
 #'
-#' outputEnv <- computePathways(
-#'   cohorts = cohorts,
-#'   cohortTableName = "cohort_table",
-#'   cdm = cdm
-#' )
+#'   downloadEunomiaData(overwrite = TRUE)
 #'
-#' Andromeda::close(outputEnv)
-#' DBI::dbDisconnect(con, shutdown = TRUE)
+#'   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+#'   cdm <- cdmFromCon(con, cdmSchema = "main", writeSchema = "main")
+#'
+#'   cohortSet <- readCohortSet(
+#'     path = system.file(package = "TreatmentPatterns", "exampleCohorts")
+#'   )
+#'
+#'   cdm <- generateCohortSet(
+#'     cdm = cdm,
+#'     cohortSet = cohortSet,
+#'     name = "cohort_table"
+#'   )
+#'
+#'   cohorts <- cohortSet %>%
+#'     # Remove 'cohort' and 'json' columns
+#'     select(-"cohort", -"json") %>%
+#'     mutate(type = c("event", "event", "event", "event", "exit", "event", "event", "target")) %>%
+#'     rename(
+#'       cohortId = "cohort_definition_id",
+#'       cohortName = "cohort_name",
+#'     )
+#'
+#'   outputEnv <- computePathways(
+#'     cohorts = cohorts,
+#'     cohortTableName = "cohort_table",
+#'     cdm = cdm
+#'   )
+#'
+#'   Andromeda::close(outputEnv)
+#'   DBI::dbDisconnect(con, shutdown = TRUE)
+#' }
 #' }
 computePathways <- function(
     cohorts,

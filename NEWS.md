@@ -1,3 +1,19 @@
+# TreatmentPatterns 2.6.2
+---------
+* Fixed spelling mistake 'summaryStatsTherapyDuraion' to 'summaryStatsTherapyDuration'.
+* Added error when only one level of data is available in the data when computing a sankey diagram.
+* Removed `createSankeyDiagram`
+* Renamed `createSankeyDiagram2` to `createSankeyDiagram`
+* Removed `createSunburstPlot`
+* Renamed `createSunburstPlot2` to `createSunburstPlot`
+* Fixed issue where target cohorts had to be at least 1 day long to be included when using DatabaseConnector.
+* Fixed CRAN error when running examples.
+* Renamed `cellCount` to `minCellCount` in export documentation.
+* Fixed issue where counts of pathways were not computed correctly.
+* Fixed spelling error `summaryStatsTherapyDuraion` to `summaryStatsTherapyDuration`.
+* Fixed issue in `export` where merging two tables could fail, if one was empty.
+
+
 # TreatmentPatterns 2.6.1
 ---------
 * Bumped R version to 4.2.1

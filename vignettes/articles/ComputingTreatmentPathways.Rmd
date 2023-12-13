@@ -397,10 +397,10 @@ head(age)
 head(sex)
 head(year)
 ```
-### summaryStatsTherapyDuraion
-The summaryStatsTherapyDuraion file contains some statistics pertaining combination and mono-therapies. Like the mean, median, minimum, and maximum durations. The standard deviation of durations, and the count of each treatment type.
-```{r summaryStatsTherapyDuraion}
-read.csv(file.path(tempDir, "default", "summaryStatsTherapyDuraion.csv"))
+### summaryStatsTherapyDuration
+The summaryStatsTherapyDuration file contains some statistics pertaining combination and mono-therapies. Like the mean, median, minimum, and maximum durations. The standard deviation of durations, and the count of each treatment type.
+```{r summaryStatsTherapyDuration}
+read.csv(file.path(tempDir, "default", "summaryStatsTherapyDuration.csv"))
 ```
 
 
@@ -413,12 +413,12 @@ read.csv(file.path(tempDir, "default", "metadata.csv"))
 ### Sunburst Plot & Sankey Diagram
 From the filtered treatmentPathways file we are able to create a sunburst plot.
 ```{r sunburstPlot}
-createSunburstPlot2(treatmentPathways = all, legend = list(w = 400))
+createSunburstPlot(treatmentPathways = all, legend = list(w = 400))
 ```
 
 Or a Sankey Diagram.
 ```{r sankeyDiagram}
-createSankeyDiagram2(all)
+createSankeyDiagram(all)
 ```
 
 Both plots are interactive in an HTML-environment, and are easy to include in shiny applications.
