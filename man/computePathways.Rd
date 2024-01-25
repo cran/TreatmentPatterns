@@ -131,7 +131,8 @@ if (require("CirceR", character.only = TRUE, quietly = TRUE)) {
     rename(
       cohortId = "cohort_definition_id",
       cohortName = "cohort_name",
-    )
+    ) \%>\%
+    select("cohortId", "cohortName", "type")
 
   outputEnv <- computePathways(
     cohorts = cohorts,

@@ -19,8 +19,10 @@ Andromeda object.}
 
 \item{outputPath}{(\code{character(1)})\cr}
 
-\item{ageWindow}{(\code{integer(1)}: \code{10})\cr
-Number of years to bin age groups into.}
+\item{ageWindow}{(\code{integer(n)}: \code{10})\cr
+Number of years to bin age groups into. It may also be a vector of integers.
+I.e. \code{c(0, 18, 150)} which will results in age group \code{0-18} which includes
+subjects \verb{< 19}. And age group \code{18-150} which includes subjects \verb{> 18}.}
 
 \item{minCellCount}{(\code{integer(1)}: \code{5})\cr
 Minimum count required per pathway. Censors data below \code{x} as \verb{<x}. This
@@ -76,7 +78,8 @@ if (require("CirceR", character.only = TRUE, quietly = TRUE)) {
     rename(
       cohortId = "cohort_definition_id",
       cohortName = "cohort_name",
-    )
+    ) \%>\%
+    select("cohortId", "cohortName", "type")
 
   outputEnv <- computePathways(
     cohorts = cohorts,

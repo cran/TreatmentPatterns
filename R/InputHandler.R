@@ -202,7 +202,7 @@ InputHandler <- R6::R6Class(
     fetchSummaryStatsTherapyDuration = function() {
       shiny::observeEvent(private$.reactiveValues$dataPath, {
         if (!is.null(private$.reactiveValues$dataPath)) {
-          private$.reactiveValues$summaryStatsTherapyDuration <- private$fetchFile("summaryStatsTherapyDuraion.csv")
+          private$.reactiveValues$summaryStatsTherapyDuration <- private$fetchFile("summaryStatsTherapyDuration.csv")
         }
       })
     }

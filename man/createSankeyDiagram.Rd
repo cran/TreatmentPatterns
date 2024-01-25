@@ -29,7 +29,7 @@ The contents of the treatmentPathways.csv-file as a data.frame().}
 (\code{htmlwidget})
 }
 \description{
-Create sankey diagram, will replace \code{createSankeyDiagram}.
+Create sankey diagram.
 }
 \examples{
 # Dummy data, typically read from treatmentPathways.csv

@@ -8,7 +8,7 @@ Class to handle the interactive plots of TreatmentPatterns (Sunburst plot &
 Sankey diagram)
 }
 \section{Super class}{
-\code{TreatmentPatterns::Module} -> \code{InteractivePlots}
+\code{\link[TreatmentPatterns:Module]{TreatmentPatterns::Module}} -> \code{InteractivePlots}
 }
 \section{Methods}{
 \subsection{Public methods}{

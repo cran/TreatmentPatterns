@@ -1,3 +1,13 @@
+# TreatmentPatterns 2.6.3
+---------
+* Fixed issue where there were duplicate rows in the exported treatmentPathways.csv file.
+* Added more comprehensive description for parameter `ageWindow` for `export()`.
+* Added additional tests validating the counts per pathway being exported by `export()`.
+* Fixed issue with re-occurring treatments in pathways.
+* Added dedicated logical tests for various pathways.
+* Added dedicated tests for target-event cohort overlaps.
+* Fixed spelling error in outputs, and interaction with them in shiny module.
+
 # TreatmentPatterns 2.6.2
 ---------
 * Fixed spelling mistake 'summaryStatsTherapyDuraion' to 'summaryStatsTherapyDuration'.

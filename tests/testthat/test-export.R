@@ -1,6 +1,7 @@
 # General ----
 library(TreatmentPatterns)
 library(testthat)
+library(dplyr)
 
 # Tests ----
 test_that("void", {
@@ -263,7 +264,7 @@ test_that("censorType", {
   
   treatmentPathways <- read.csv(file.path(tempDirLocal, "treatmentPathways.csv"))
   
-  expect_equal(min(treatmentPathways$freq), 2)
+  expect_equal(min(treatmentPathways$freq), 1)
   
   ## "stuff" ----
   expect_error(
@@ -505,7 +506,7 @@ test_that("censorType", {
   
   treatmentPathways <- read.csv(file.path(tempDirLocal, "treatmentPathways.csv"))
   
-  expect_equal(min(treatmentPathways$freq), 2)
+  expect_equal(min(treatmentPathways$freq), 1)
   
   ## "stuff" ----
   expect_error(
@@ -518,4 +519,69 @@ test_that("censorType", {
   
   Andromeda::close(andromeda)
   DBI::dbDisconnect(globals$con, shutdown = TRUE)
+})
+
+
+test_that("counts", {
+  skip_on_cran()
+  
+  globals <- generateCohortTableCDMC()
+  
+  andromeda <- TreatmentPatterns::computePathways(
+    cohorts = globals$cohorts,
+    cohortTableName = globals$cohortTableName,
+    cdm = globals$cdm
+  )
+  
+  tempDirLocal <- file.path(tempdir(), "output")
+  
+  ## "remove" ----
+  TreatmentPatterns::export(
+    andromeda = andromeda,
+    outputPath = tempDirLocal,
+    minCellCount = 1, ageWindow = c(0, 18, 150)
+  )
+  
+  treatmentPathways <- read.csv(file.path(tempDirLocal, "treatmentPathways.csv"))
+
+  totalAll <- treatmentPathways %>%
+    dplyr::filter(.data$age == "all", .data$sex == "all", indexYear == "all") %>%
+    summarize(sum(freq)) %>%
+    pull()
+  
+  # all == male + female
+  sexes <- unique(treatmentPathways$sex)
+  sexes <- sexes[sexes != "all"]
+  totalSexes <- lapply(sexes, function(sexGroup) {
+    treatmentPathways %>%
+      dplyr::filter(.data$age == "all", .data$sex == sexGroup, indexYear == "all") %>%
+      summarize(sum(freq)) %>%
+      pull()
+  }) %>% unlist() %>% sum()
+  
+  expect_identical(totalAll, totalSexes)
+  
+  # Age group
+  ages <- unique(treatmentPathways$age)
+  ages <- ages[ages != "all"] %>% unlist()
+  totalAges <- lapply(ages, function(ageGroup) {
+    treatmentPathways %>%
+      dplyr::filter(.data$age == ageGroup, .data$sex == "all", indexYear == "all") %>%
+      summarize(sum(freq)) %>%
+      pull()
+  }) %>% unlist() %>% sum()
+  
+  expect_identical(totalAll, totalAges)
+  
+  # Years
+  years <- unique(treatmentPathways$indexYear)
+  years <- years[years != "all"]
+  totalYears <- lapply(years, function(year) {
+    treatmentPathways %>%
+      dplyr::filter(.data$age == "all", .data$sex == "all", indexYear == year) %>%
+      summarize(sum(freq)) %>%
+      pull()
+  }) %>% unlist() %>% sum()
+  
+  expect_identical(totalAll, totalYears)
 })

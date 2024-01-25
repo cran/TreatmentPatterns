@@ -105,7 +105,7 @@ library(dplyr)
 
 cohorts <- cohortSet %>%
   # Remove 'cohort' and 'json' columns
-  select(-"cohort", -"json") %>%
+  select(-"cohort", -"json", -"cohort_name_snakecase") %>%
   mutate(type = c("event", "event", "event", "event", "exit", "event", "event", "target")) %>%
   rename(
     cohortId = "cohort_definition_id",
@@ -248,7 +248,7 @@ identical(
   defaultSettings$treatmentHistory %>% pull(personId)
 )
 ```
-In our example case for Viral Sinusitis it does not appear to matter, as the same people are included.
+In our example case for Viral Sinusitis it does appear to matter, as the personID's are not identical.
 
 ## Exporting result objects
 The `export` function allows us to export the generated result objects from `computePathways`. There are several arguments that we can change to alter the behavior, depending on what we are allowed to share.
@@ -374,15 +374,15 @@ treatmentPathways <- read.csv(file.path(tempDir, "default", "treatmentPathways.c
 head(treatmentPathways)
 ```
 
-We are able to filter based on the strata.
+We are able to filter based on the strata, and filter on a frequency > 5.
 ```{r treatmentPathwaysAll}
 all <- treatmentPathways %>%
   filter(
     age == "all",
     sex == "all",
-    indexYear == "all")
-
-all
+    indexYear == "all",
+    freq > 5
+  )
 ```
 We can see the pathways contain the treatment names we provided in our event cohorts. Besides that we also see the paths are annoted with a `+` or `-`. The `+` indicates two treatments are a combination therapy, i.e. `Acetaminophen+Amoxicillin` is a combination of _Acetaminophen_ and _Amoxicillin_. The `-` indicates a switch between treatments, i.e. `Aspirin-Acetaminophen` is a switch from _Aspirin_ to _Acetaminophen_. Note that these combinations and switches can occur in the same pathway, i.e. `Amoxicillin+Clavulanate-Aspirin`. The first treatment is a combination of _Amoxicillin_ and _Clavulanate_ that switches to _Aspirin_.
 
@@ -413,7 +413,7 @@ read.csv(file.path(tempDir, "default", "metadata.csv"))
 ### Sunburst Plot & Sankey Diagram
 From the filtered treatmentPathways file we are able to create a sunburst plot.
 ```{r sunburstPlot}
-createSunburstPlot(treatmentPathways = all, legend = list(w = 400))
+createSunburstPlot(treatmentPathways = all, legend = list(w = 300))
 ```
 
 Or a Sankey Diagram.

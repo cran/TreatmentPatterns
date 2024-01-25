@@ -40,7 +40,7 @@ createSunburstPlot <- function(treatmentPathways, groupCombinations = FALSE, ...
 
 #' createSunburstPlot2
 #' 
-#' [DEPRECATED] New sunburstPlot function
+#' DEPRECATED New sunburstPlot function
 #'
 #' @template param_treatmentPathways 
 #' @template param_groupCombinations

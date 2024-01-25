@@ -7,7 +7,7 @@
 Class to handle the characterization plots.
 }
 \section{Super class}{
-\code{TreatmentPatterns::Module} -> \code{CharacterizationPlots}
+\code{\link[TreatmentPatterns:Module]{TreatmentPatterns::Module}} -> \code{CharacterizationPlots}
 }
 \section{Methods}{
 \subsection{Public methods}{

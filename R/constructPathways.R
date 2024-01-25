@@ -337,8 +337,8 @@ doEraCollapse <- function(andromeda, eraCollapseSize) {
       dplyr::select(-"needsMerge", -"rowNumber") %>%
       dplyr::mutate(durationEra = .data$eventEndDate - .data$eventStartDate)
   } else {
-    blockEnd <- needsMerge$rowNumber[seq_len(n - 1) + 1] != needsMerge$rowNumber[seq_len(n - 1) ] + 1
-    needsMerge$blockId <- c(0, cumsum(blockEnd))
+    blockEnd <- needsMerge$rowNumber[seq_len(n)] != needsMerge$rowNumber[seq_len(n)] + 1
+    needsMerge$blockId <- cumsum(blockEnd)
     needsMerge <- needsMerge %>%
       dplyr::group_by(.data$blockId) %>%
       dplyr::summarise(
@@ -361,8 +361,8 @@ doEraCollapse <- function(andromeda, eraCollapseSize) {
         eventEndDate = if_else(
           is.null(.data$newEndDate), 
           .data$eventEndDate, 
-          .data$newEndDate)) %>%
-      dplyr::filter(!.data$needsMerge) %>%
+          .data$newEndDate)) %>% filter(is.na(needsMerge))%>%
+      dplyr::filter(is.na(.data$needsMerge)) %>%
       dplyr::select(-"newEndDate", -"needsMerge", -"rowNumber") %>%
       dplyr::mutate(durationEra = .data$eventEndDate - .data$eventStartDate)
   }
@@ -390,7 +390,6 @@ doCombinationWindow <- function(
     andromeda,
     combinationWindow,
     minPostCombinationDuration) {
-  
   time1 <- Sys.time()
   
   # Find which rows contain some overlap
@@ -571,7 +570,9 @@ doCombinationWindow <- function(
       dplyr::mutate(durationEra = .data$eventEndDate - .data$eventStartDate)
     
     treatmentHistory <- treatmentHistory %>%
-      dplyr::filter(.data$durationEra >= minPostCombinationDuration | is.na(.data$durationEra))
+      filter(.data$eventStartDate != .data$eventEndDate)
+      # Original from mi-erasmus and older versions of DARWIN TreatmentPatterns
+      #dplyr::filter(.data$durationEra >= minPostCombinationDuration | is.na(.data$durationEra))
     
     andromeda$treatmentHistory <- treatmentHistory %>%
       dplyr::select(

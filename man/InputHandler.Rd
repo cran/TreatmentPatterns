@@ -8,7 +8,7 @@ Class to handle input from the user. Supports direct paths or input fields
 through \code{setDataPath()}.\cr\cr
 }
 \section{Super class}{
-\code{TreatmentPatterns::Module} -> \code{InputHandler}
+\code{\link[TreatmentPatterns:Module]{TreatmentPatterns::Module}} -> \code{InputHandler}
 }
 \section{Active bindings}{
 \if{html}{\out{<div class="r6-active-bindings">}}

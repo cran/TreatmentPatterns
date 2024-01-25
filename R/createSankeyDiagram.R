@@ -161,7 +161,7 @@ createSankeyDiagram <- function(treatmentPathways, groupCombinations = FALSE, co
 
 #' createSankeyDiagram2
 #' 
-#' [DEPRECATED] Create sankey diagram.
+#' DEPRECATED Create sankey diagram.
 #'
 #' @template param_treatmentPathways
 #' @template param_groupCombinations
