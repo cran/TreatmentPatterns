@@ -1,3 +1,9 @@
+# TreatmentPatterns 2.6.4
+---------
+* Fixed issue with minPostCombinationWindow broken by the fix for re-occurring treatments.
+* Added unit tests for minPostCombinationWindow.
+
+
 # TreatmentPatterns 2.6.3
 ---------
 * Fixed issue where there were duplicate rows in the exported treatmentPathways.csv file.

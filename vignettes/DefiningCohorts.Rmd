@@ -1,5 +1,5 @@
 ---
-title: "1. Defining Cohorts"
+title: "Defining Cohorts"
 always_allow_html: yes
 output:
   html_document:

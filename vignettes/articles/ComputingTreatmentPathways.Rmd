@@ -1,5 +1,5 @@
 ---
-title: "2. Computing Treatment Pathways"
+title: "Computing Treatment Pathways"
 always_allow_html: yes
 output:
   html_document:
@@ -248,7 +248,7 @@ identical(
   defaultSettings$treatmentHistory %>% pull(personId)
 )
 ```
-In our example case for Viral Sinusitis it does appear to matter, as the personID's are not identical.
+In our example case for Viral Sinusitis it appears to not matter, as the personID's are identical.
 
 ## Exporting result objects
 The `export` function allows us to export the generated result objects from `computePathways`. There are several arguments that we can change to alter the behavior, depending on what we are allowed to share.

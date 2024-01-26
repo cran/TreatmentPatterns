@@ -223,7 +223,7 @@ test_that("censorType", {
   
   ## "remove" ----
   expect_message(
-    export(
+    TreatmentPatterns::export(
       andromeda = andromeda,
       outputPath = tempDirLocal,
       minCellCount = 10,
@@ -238,7 +238,7 @@ test_that("censorType", {
 
   ## "minCellCount" ----
   expect_message(
-    export(
+    TreatmentPatterns::export(
       andromeda = andromeda,
       outputPath = tempDirLocal,
       minCellCount = 10,
@@ -253,7 +253,7 @@ test_that("censorType", {
   
   ## "mean" ----
   expect_message(
-    export(
+    TreatmentPatterns::export(
       andromeda = andromeda,
       outputPath = tempDirLocal,
       minCellCount = 10,
@@ -264,7 +264,7 @@ test_that("censorType", {
   
   treatmentPathways <- read.csv(file.path(tempDirLocal, "treatmentPathways.csv"))
   
-  expect_equal(min(treatmentPathways$freq), 1)
+  expect_equal(min(treatmentPathways$freq), 2)
   
   ## "stuff" ----
   expect_error(
@@ -506,7 +506,7 @@ test_that("censorType", {
   
   treatmentPathways <- read.csv(file.path(tempDirLocal, "treatmentPathways.csv"))
   
-  expect_equal(min(treatmentPathways$freq), 1)
+  expect_equal(min(treatmentPathways$freq), 2)
   
   ## "stuff" ----
   expect_error(

@@ -300,7 +300,6 @@ doSplitEventCohorts <- function(
   return(invisible(NULL))
 }
 
-
 #' doEraCollapse
 #'
 #' Updates the treatmentHistory data.frame where if gapSame is smaller than the
@@ -361,7 +360,7 @@ doEraCollapse <- function(andromeda, eraCollapseSize) {
         eventEndDate = if_else(
           is.null(.data$newEndDate), 
           .data$eventEndDate, 
-          .data$newEndDate)) %>% filter(is.na(needsMerge))%>%
+          .data$newEndDate)) %>%
       dplyr::filter(is.na(.data$needsMerge)) %>%
       dplyr::select(-"newEndDate", -"needsMerge", -"rowNumber") %>%
       dplyr::mutate(durationEra = .data$eventEndDate - .data$eventStartDate)
@@ -465,11 +464,11 @@ doCombinationWindow <- function(
     ))
     
     sumSwitchComb <- andromeda$treatmentHistory %>%
-      filter(
+      dplyr::filter(
         .data$switch == 1 |
           .data$combinationFRFS == 1 |
           .data$combinationLRFS == 1) %>%
-      summarise(n()) %>%
+      dplyr::summarise(dplyr::n()) %>%
       pull()
     
     sumSelectedRows <- andromeda$treatmentHistory %>%
@@ -570,9 +569,9 @@ doCombinationWindow <- function(
       dplyr::mutate(durationEra = .data$eventEndDate - .data$eventStartDate)
     
     treatmentHistory <- treatmentHistory %>%
-      filter(.data$eventStartDate != .data$eventEndDate)
+      #dplyr::filter(.data$eventStartDate != .data$eventEndDate)
       # Original from mi-erasmus and older versions of DARWIN TreatmentPatterns
-      #dplyr::filter(.data$durationEra >= minPostCombinationDuration | is.na(.data$durationEra))
+      dplyr::filter(.data$durationEra >= minPostCombinationDuration | is.na(.data$durationEra))
     
     andromeda$treatmentHistory <- treatmentHistory %>%
       dplyr::select(

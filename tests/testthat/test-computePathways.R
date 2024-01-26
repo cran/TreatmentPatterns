@@ -3,6 +3,7 @@ library(testthat)
 library(TreatmentPatterns)
 library(dplyr)
 library(stringr)
+library(CDMConnector)
 
 test_that("computePathways DatabaseConnector", {
   testthat::skip_on_cran()
@@ -20,9 +21,9 @@ test_that("computePathways DatabaseConnector", {
           cdmSchema = "main",
           resultSchema = "main"
         ),
-        "After maxPathLength: 6675"
+        "After maxPathLength: 554"
       ),
-      "After combinationWindow: 6682"
+      "After combinationWindow: 555"
     ),
     "Original number of rows: 8352"
   )
@@ -40,9 +41,9 @@ test_that("computePathways CDMConnector", {
           cohorts = globals$cohorts,
           cohortTableName = globals$cohortTableName
         ),
-        "After maxPathLength: 6675"
+        "After maxPathLength: 554"
       ),
-      "After combinationWindow: 6682"
+      "After combinationWindow: 555"
     ),
     "Original number of rows: 8352"
   )
@@ -66,7 +67,7 @@ test_that("nrow exitCohorts > 0", {
       cohorts = cohorts,
       cohortTableName = globals$cohortTableName
     ),
-    "After maxPathLength: 6919"
+    "After maxPathLength: 2117"
   )
 })
 
@@ -248,21 +249,117 @@ test_that("combinationWindow", {
   )
 })
 
-test_that("minPostCombinationDuration", {
-  skip_on_cran()
-  globals <- generateCohortTableCDMC()
+test_that("minPostCombinationDuration: 30", {
+  con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
   
-  expect_error(
-    computePathways(
-      cohorts = globals$cohorts,
-      cohortTableName = globals$cohortTableName,
-      cdm = globals$cdm,
-      minPostCombinationDuration = "Stuff"
-    ),
-    "Must be of.+type.+"
+  cohorts <- data.frame(
+    cohortId = c(1, 2, 3),
+    cohortName = c("X", "A", "B"),
+    type = c("target", "event", "event")
   )
+  
+  cohort_table <- dplyr::tribble(
+    ~cohort_definition_id, ~subject_id, ~cohort_start_date,    ~cohort_end_date,
+    1,                     1,           as.Date("2020-01-01"), as.Date("2023-01-01"),
+    2,                     1,           as.Date("2020-01-01"), as.Date("2020-03-01"),
+    3,                     1,           as.Date("2020-01-10"), as.Date("2020-03-15")
+  )
+  
+  copy_to(con, cohort_table, overwrite = TRUE)
+  
+  cdm <- cdmFromCon(con, cdmSchema = "main", writeSchema = "main", cohortTables = "cohort_table")
+  
+  ## 30 ----
+  andromeda <- TreatmentPatterns::computePathways(
+    cohorts = cohorts,
+    cohortTableName = "cohort_table",
+    cdm = cdm,
+    includeTreatments = "startDate",
+    periodPriorToIndex = 0,
+    minEraDuration = 0,
+    eraCollapseSize = 3,
+    combinationWindow = 30,
+    minPostCombinationDuration = 30,
+    filterTreatments = "All",
+    maxPathLength = 5
+  )
+  
+  tempDir <- tempdir()
+  TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1)
+  
+  treatmentPaths <- read.csv(file.path(tempDir, "treatmentPathways.csv"))
+  
+  path <- treatmentPaths %>%
+    dplyr::filter(
+      .data$age == "all",
+      .data$sex == "all",
+      .data$indexYear == "all") %>%
+    dplyr::pull(.data$path)
+  
+  expect_identical(path, "A+B")
+  
+  ## 12 ----
+  andromeda <- TreatmentPatterns::computePathways(
+    cohorts = cohorts,
+    cohortTableName = "cohort_table",
+    cdm = cdm,
+    includeTreatments = "startDate",
+    periodPriorToIndex = 0,
+    minEraDuration = 0,
+    eraCollapseSize = 3,
+    combinationWindow = 30,
+    minPostCombinationDuration = 12,
+    filterTreatments = "All",
+    maxPathLength = 5
+  )
+  
+  tempDir <- tempdir()
+  TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1)
+  
+  treatmentPaths <- read.csv(file.path(tempDir, "treatmentPathways.csv"))
+  
+  path <- treatmentPaths %>%
+    dplyr::filter(
+      .data$age == "all",
+      .data$sex == "all",
+      .data$indexYear == "all") %>%
+    dplyr::pull(.data$path)
+  
+  expect_identical(path, "A+B-B")
+  
+  
+  ## 8 ----
+  andromeda <- TreatmentPatterns::computePathways(
+    cohorts = cohorts,
+    cohortTableName = "cohort_table",
+    cdm = cdm,
+    includeTreatments = "startDate",
+    periodPriorToIndex = 0,
+    minEraDuration = 0,
+    eraCollapseSize = 3,
+    combinationWindow = 30,
+    minPostCombinationDuration = 8,
+    filterTreatments = "All",
+    maxPathLength = 5
+  )
+  
+  tempDir <- tempdir()
+  TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1)
+  
+  treatmentPaths <- read.csv(file.path(tempDir, "treatmentPathways.csv"))
+  
+  path <- treatmentPaths %>%
+    dplyr::filter(
+      .data$age == "all",
+      .data$sex == "all",
+      .data$indexYear == "all") %>%
+    dplyr::pull(.data$path)
+  
+  expect_identical(path, "A-A+B-B")
+  
+  DBI::dbDisconnect(con)
 })
-
+p
 test_that("filterTreatments", {
   skip_on_cran()
   globals <- generateCohortTableCDMC()
