@@ -1,3 +1,13 @@
+# TreatmentPatterns 2.6.5
+---------
+* Removed stringi, rjson, and googleVis as dependencies.
+* Fixed unit tests that had dummy data outside of observation data.
+* Fix for complex edge-case paths with re-occuring treatments.
+* Added unit tests for edge-cases.
+* Added warning when `minEraDuration` > `minPostCombinationWindow` or `combinationWindow`.
+* Fixed issue when `filterTreatments` was set to `"changes"`, age and sex columns were dropped from output.
+* datatypes of cohort_table are now checked.
+
 # TreatmentPatterns 2.6.4
 ---------
 * Fixed issue with minPostCombinationWindow broken by the fix for re-occurring treatments.

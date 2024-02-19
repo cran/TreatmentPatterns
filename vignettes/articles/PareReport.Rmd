@@ -1,5 +1,5 @@
 ---
-title: "PaRe Report: TreatmentPatterns [2.6.1]"
+title: "PaRe Report: TreatmentPatterns [2.6.5]"
 author: "`r paste('PaRe', packageVersion('PaRe'))`"
 date: "`r Sys.Date()`"
 output:
@@ -8,7 +8,7 @@ output:
     toc_float: true
     theme: cosmo
 vignette: >
-  %\VignetteIndexEntry{TreatmentPatterns [2.6.1]}
+  %\VignetteIndexEntry{TreatmentPatterns [2.6.5]}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

@@ -30,7 +30,7 @@ test_that("computePathways DatabaseConnector", {
 })
 
 test_that("computePathways CDMConnector", {
-  skip_on_cran()
+  testthat::skip_on_cran()
   globals <- generateCohortTableCDMC()
   
   expect_message(
@@ -53,6 +53,7 @@ test_that("computePathways CDMConnector", {
 
 test_that("nrow exitCohorts > 0", {
   skip_on_cran()
+  skip_on_ci()
   globals <- generateCohortTableCDMC()
   
   cohorts <- globals$cohorts %>%
@@ -64,6 +65,29 @@ test_that("nrow exitCohorts > 0", {
   expect_message(
     computePathways(
       cdm = globals$cdm,
+      cohorts = cohorts,
+      cohortTableName = globals$cohortTableName
+    ),
+    "After maxPathLength: 2117"
+  )
+})
+
+test_that("nrow exitCohorts > 0", {
+  skip_on_cran()
+  skip_on_ci()
+  globals <- generateCohortTableCG()
+  
+  cohorts <- globals$cohorts %>%
+    mutate(type = case_when(
+      .data$cohortName == "Acetaminophen" ~ "exit",
+      .default = .data$type
+    ))
+  
+  expect_message(
+    computePathways(
+      connectionDetails = globals$connectionDetails,
+      cdmSchema = globals$cdmSchema,
+      resultSchema = globals$resultSchema,
       cohorts = cohorts,
       cohortTableName = globals$cohortTableName
     ),
@@ -239,11 +263,13 @@ test_that("combinationWindow", {
   globals <- generateCohortTableCDMC()
   
   expect_error(
-    computePathways(
-      cohorts = globals$cohorts,
-      cohortTableName = globals$cohortTableName,
-      cdm = globals$cdm,
-      combinationWindow = ""
+    suppressWarnings(
+      computePathways(
+        cohorts = globals$cohorts,
+        cohortTableName = globals$cohortTableName,
+        cdm = globals$cdm,
+        combinationWindow = ""
+      )
     ),
     "Must be of type.+'numeric'"
   )
@@ -260,9 +286,9 @@ test_that("minPostCombinationDuration: 30", {
   
   cohort_table <- dplyr::tribble(
     ~cohort_definition_id, ~subject_id, ~cohort_start_date,    ~cohort_end_date,
-    1,                     1,           as.Date("2020-01-01"), as.Date("2023-01-01"),
-    2,                     1,           as.Date("2020-01-01"), as.Date("2020-03-01"),
-    3,                     1,           as.Date("2020-01-10"), as.Date("2020-03-15")
+    1,                     5,           as.Date("2014-01-01"), as.Date("2015-01-01"),
+    2,                     5,           as.Date("2014-01-01"), as.Date("2014-03-01"),
+    3,                     5,           as.Date("2014-01-10"), as.Date("2014-03-15")
   )
   
   copy_to(con, cohort_table, overwrite = TRUE)
@@ -359,7 +385,7 @@ test_that("minPostCombinationDuration: 30", {
   
   DBI::dbDisconnect(con)
 })
-p
+
 test_that("filterTreatments", {
   skip_on_cran()
   globals <- generateCohortTableCDMC()
@@ -394,6 +420,112 @@ test_that("filterTreatments", {
     cdm = globals$cdm,
     filterTreatments = "All"
   )
+  
+  firstTH <- first$treatmentHistory %>%
+    dplyr::collect()
+  
+  changesTH <- changes$treatmentHistory %>%
+    dplyr::collect()
+  
+  allTH <- all$treatmentHistory %>%
+    dplyr::collect()
+  
+  # Check names
+  expect_identical(
+    sort(names(firstTH)),
+    sort(names(changesTH)),
+    sort(names(allTH))
+  )
+
+  # eventCohortId
+  expect_identical(
+    "character",
+    class(firstTH$eventCohortId),
+    class(changesTH$eventCohortId),
+    class(allTH$eventCohortId)
+  )
+
+  expect_identical(
+    "numeric",
+    class(firstTH$personId),
+    class(changesTH$personId),
+    class(allTH$personId)
+  )
+
+  expect_identical(
+    "numeric",
+    class(firstTH$indexYear),
+    class(changesTH$indexYear),
+    class(allTH$indexYear)
+  )
+
+  expect_identical(
+    "integer",
+    class(firstTH$eventStartDate),
+    class(changesTH$eventStartDate),
+    class(allTH$eventStartDate)
+  )
+
+  expect_identical(
+    "integer",
+    class(firstTH$eventEndDate),
+    class(changesTH$eventStartDate),
+    class(allTH$eventEndDate)
+  )
+
+  expect_identical(
+    "numeric",
+    class(firstTH$age),
+    class(changesTH$age),
+    class(allTH$age)
+  )
+
+  expect_identical(
+    "character",
+    class(firstTH$sex),
+    class(changesTH$sex),
+    class(allTH$sex)
+  )
+
+  expect_identical(
+    "integer",
+    class(firstTH$durationEra),
+    class(changesTH$durationEra),
+    class(allTH$durationEra)
+  )
+
+  expect_identical(
+    "numeric",
+    class(firstTH$sortOrder),
+    class(changesTH$sortOrder),
+    class(allTH$sortOrder)
+  )
+
+  expect_identical(
+    "integer",
+    class(firstTH$eventSeq),
+    class(changesTH$eventSeq),
+    class(allTH$eventSeq)
+  )
+
+  expect_identical(
+    "character",
+    class(firstTH$eventCohortName),
+    class(changesTH$eventCohortName),
+    class(allTH$eventCohortName)
+  )
+  
+  expect_false(any(is.na(firstTH)))
+  expect_false(any(is.na(changesTH)))
+  expect_false(any(is.na(allTH)))
+  
+  expect_false(any(is.null(firstTH)))
+  expect_false(any(is.null(changesTH)))
+  expect_false(any(is.null(allTH)))
+  
+  expect_true(nrow(firstTH) == 554)
+  expect_true(nrow(changesTH) == 555)
+  expect_true(nrow(allTH) == 555)
 
   expect_true(Andromeda::isAndromeda(first))
   expect_true(Andromeda::isAndromeda(changes))

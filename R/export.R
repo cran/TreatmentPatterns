@@ -87,7 +87,7 @@ export <- function(andromeda, outputPath, ageWindow = 10, minCellCount = 5, cens
   if (!dir.exists(outputPath)) {
     dir.create(outputPath)
   }
-  
+
   treatmentHistory <- andromeda$treatmentHistory %>%
     dplyr::collect() %>%
     dplyr::select(
@@ -369,6 +369,7 @@ computeTreatmentPathways <- function(treatmentHistory, ageWindow, minCellCount, 
 
 collapsePaths <- function(treatmentHistory) {
   treatmentHistory %>%
+    dplyr::arrange(.data$eventSeq) %>%
     dplyr::group_by(.data$personId, .data$indexYear) %>%
     dplyr::mutate(
       pathway = list(.data$eventCohortName[.data$eventSeq]),

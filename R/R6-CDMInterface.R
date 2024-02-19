@@ -225,7 +225,8 @@ CDMInterface <- R6::R6Class(
       
       andromeda[[andromedaTableName]] <- private$cdm[[cohortTableName]] %>%
         dplyr::filter(.data$cohort_definition_id %in% cohortIds) %>%
-        dplyr::filter(.data$cohort_end_date - .data$cohort_start_date >= 0) %>%
+        dplyr::filter(!!CDMConnector::datediff("cohort_start_date", "cohort_end_date") >= minEraDuration) %>%
+        #dplyr::filter(.data$cohort_end_date - .data$cohort_start_date >= 0) %>%
         dplyr::group_by(.data$subject_id) %>%
         dplyr::filter(any(.data$cohort_definition_id %in% targetCohortIds, na.rm = TRUE)) %>%
         dplyr::ungroup() %>%
@@ -235,7 +236,7 @@ CDMInterface <- R6::R6Class(
         dplyr::inner_join(
           private$cdm$concept,
           by = dplyr::join_by(gender_concept_id == concept_id)) %>%
-        dplyr::filter(!!CDMConnector::datediff("cohort_start_date", "cohort_end_date") >= minEraDuration) %>%
+        #dplyr::filter(!!CDMConnector::datediff("cohort_start_date", "cohort_end_date") >= minEraDuration) %>%
         dplyr::mutate(date_of_birth = as.Date(paste0(as.integer(year_of_birth), "-01-01"))) %>%
         dplyr::mutate(age = !!CDMConnector::datediff("date_of_birth", "cohort_start_date", interval = "year")) %>%
         dplyr::rename(sex = "concept_name") %>%

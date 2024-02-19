@@ -69,12 +69,14 @@ countsYear
 createSankeyDiagram
 createSunburstPlot
 csv
+datatypes
 doi
 dplyr
 durations
 eraCollapseSize
 executeTreatmentPatterns
 filterTreatments
+googleVis
 inputHandler
 kay
 launchResultsExplorer
@@ -85,6 +87,7 @@ minCellCount
 minEraDuration
 minPostCombinationDuration
 minPostCombinationWindow
+occuring
 onwards
 pathwaySettings
 periodPriorToIndex
@@ -93,12 +96,14 @@ pre
 programatically
 pr’
 reactiveValues
+rjson
 sankey
 sankeyNetwork
 sharable
 shinyApp
 splitEventCohorts
 splitTime
+stringi
 styleguide
 summaryStatsTherapyDuraion
 summaryStatsTherapyDuration

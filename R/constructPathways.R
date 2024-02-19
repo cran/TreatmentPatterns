@@ -567,10 +567,11 @@ doCombinationWindow <- function(
       dplyr::union_all(andromeda[[sprintf("addRowsFRFS_%s", iterations)]]) %>%
       dplyr::union_all(andromeda[[sprintf("addRowsLRFS_%s", iterations)]]) %>%
       dplyr::mutate(durationEra = .data$eventEndDate - .data$eventStartDate)
-    
+
     treatmentHistory <- treatmentHistory %>%
       #dplyr::filter(.data$eventStartDate != .data$eventEndDate)
       # Original from mi-erasmus and older versions of DARWIN TreatmentPatterns
+      #dbplyr::window_order(.data$sortOrder) %>%
       dplyr::filter(.data$durationEra >= minPostCombinationDuration | is.na(.data$durationEra))
     
     andromeda$treatmentHistory <- treatmentHistory %>%
@@ -718,7 +719,7 @@ doFilterTreatments <- function(andromeda, filterTreatments) {
     
     # Remove all rows with same sequential treatments
     andromeda$treatmentHistory <- andromeda$treatmentHistory %>%
-      dplyr::group_by(.data$personId, .data$indexYear, .data$eventCohortId, .data$group) %>%
+      dplyr::group_by(.data$personId, .data$age, .data$sex, .data$indexYear, .data$eventCohortId, .data$group, .data$sortOrder) %>%
       dplyr::summarise(
         eventStartDate = min(.data$eventStartDate, na.rm = TRUE),
         eventEndDate = max(.data$eventEndDate, na.rm = TRUE),
