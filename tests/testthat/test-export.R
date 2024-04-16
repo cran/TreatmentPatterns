@@ -211,7 +211,7 @@ test_that("censorType", {
   
   globals <- generateCohortTableCG()
   
-  andromeda <- TreatmentPatterns::computePathways(
+  andromeda <- computePathways(
     cohorts = globals$cohorts,
     cohortTableName = globals$cohortTableName,
     connectionDetails = globals$connectionDetails,

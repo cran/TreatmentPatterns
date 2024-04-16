@@ -8,7 +8,8 @@ test_that("ShinyApp", {
   # Fields
   expect_identical(app$namespace, "app")
   expect_true(is.R6(app$inputHandler))
-  expect_true(is.R6(app$interactivePlots))
+  expect_true(is.R6(app$sunburstPlot))
+  expect_true(is.R6(app$sankeyDiagram))
   expect_true(is.R6(app$characterizationPlots))
   
   # UI

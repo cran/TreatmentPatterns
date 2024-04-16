@@ -1,3 +1,4 @@
+ABCD
 All’
 Biomedicine
 CDM
@@ -39,9 +40,13 @@ ReadMe
 ResultExplorer
 Rijnbeek
 Sankey
+SankeyDiagram
 ShinyApps
+ShinyModule
 Sinusistis
 SqlRender
+SunburstPlot
+TLDR
 Tidyverse
 UI
 Untestable
@@ -59,6 +64,7 @@ cmpb
 cohortId
 cohortName
 cohortSet
+combinationEvents
 combinationWindow
 computePathways
 countEdges
@@ -87,6 +93,7 @@ minCellCount
 minEraDuration
 minPostCombinationDuration
 minPostCombinationWindow
+monoEvents
 occuring
 onwards
 pathwaySettings
@@ -108,6 +115,7 @@ styleguide
 summaryStatsTherapyDuraion
 summaryStatsTherapyDuration
 sunburstPlot
+totalEvents
 treatmentPathways
 uiBody
 uiMenu

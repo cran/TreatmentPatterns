@@ -8,7 +8,7 @@ Class to handle input from the user. Supports direct paths or input fields
 through \code{setDataPath()}.\cr\cr
 }
 \section{Super class}{
-\code{\link[TreatmentPatterns:Module]{TreatmentPatterns::Module}} -> \code{InputHandler}
+\code{\link[TreatmentPatterns:ShinyModule]{TreatmentPatterns::ShinyModule}} -> \code{InputHandler}
 }
 \section{Active bindings}{
 \if{html}{\out{<div class="r6-active-bindings">}}
@@ -32,8 +32,8 @@ reactiveValues class created by \link[shiny]{reactiveValues}.}
 \if{html}{\out{
 <details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="TreatmentPatterns" data-topic="Module" data-id="initialize"><a href='../../TreatmentPatterns/html/Module.html#method-Module-initialize'><code>TreatmentPatterns::Module$initialize()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="TreatmentPatterns" data-topic="Module" data-id="validate"><a href='../../TreatmentPatterns/html/Module.html#method-Module-validate'><code>TreatmentPatterns::Module$validate()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="TreatmentPatterns" data-topic="ShinyModule" data-id="initialize"><a href='../../TreatmentPatterns/html/ShinyModule.html#method-ShinyModule-initialize'><code>TreatmentPatterns::ShinyModule$initialize()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="TreatmentPatterns" data-topic="ShinyModule" data-id="validate"><a href='../../TreatmentPatterns/html/ShinyModule.html#method-ShinyModule-validate'><code>TreatmentPatterns::ShinyModule$validate()</code></a></span></li>
 </ul>
 </details>
 }}

@@ -1,12 +1,14 @@
 #' @title CharacterizationPlots
 #' 
+#' @include ShinyModule.R
+#' 
 #' @description
 #' Class to handle the characterization plots.
 #' 
 #' @export
 CharacterizationPlots <- R6::R6Class(
   classname = "CharacterizationPlots",
-  inherit = Module,
+  inherit = ShinyModule,
   
   # Public ----
   public = list(

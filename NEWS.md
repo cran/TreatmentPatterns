@@ -1,3 +1,9 @@
+# TreatmentPatterns 2.6.6
+---------
+* Internal update to shinyApp.
+* Update to createSankeyDiagram() to properly handle combinations consisting of >2.
+* Added article to package website about best practices.
+
 # TreatmentPatterns 2.6.5
 ---------
 * Removed stringi, rjson, and googleVis as dependencies.

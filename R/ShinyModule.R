@@ -1,13 +1,13 @@
-#' @title Module
+#' @title ShinyModule
 #'
 #' @description
-#' Module super class
+#' ShinyModule super class
 #' 
 #' @field namespace Namespace of the module.
 #' 
 #' @export
-Module <- R6::R6Class(
-  classname = "Module",
+ShinyModule <- R6::R6Class(
+  classname = "ShinyModule",
   
   # Public ----
   public = list(

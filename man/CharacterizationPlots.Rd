@@ -7,7 +7,7 @@
 Class to handle the characterization plots.
 }
 \section{Super class}{
-\code{\link[TreatmentPatterns:Module]{TreatmentPatterns::Module}} -> \code{CharacterizationPlots}
+\code{\link[TreatmentPatterns:ShinyModule]{TreatmentPatterns::ShinyModule}} -> \code{CharacterizationPlots}
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -21,8 +21,8 @@ Class to handle the characterization plots.
 \if{html}{\out{
 <details open><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="TreatmentPatterns" data-topic="Module" data-id="initialize"><a href='../../TreatmentPatterns/html/Module.html#method-Module-initialize'><code>TreatmentPatterns::Module$initialize()</code></a></span></li>
-<li><span class="pkg-link" data-pkg="TreatmentPatterns" data-topic="Module" data-id="validate"><a href='../../TreatmentPatterns/html/Module.html#method-Module-validate'><code>TreatmentPatterns::Module$validate()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="TreatmentPatterns" data-topic="ShinyModule" data-id="initialize"><a href='../../TreatmentPatterns/html/ShinyModule.html#method-ShinyModule-initialize'><code>TreatmentPatterns::ShinyModule$initialize()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="TreatmentPatterns" data-topic="ShinyModule" data-id="validate"><a href='../../TreatmentPatterns/html/ShinyModule.html#method-ShinyModule-validate'><code>TreatmentPatterns::ShinyModule$validate()</code></a></span></li>
 </ul>
 </details>
 }}

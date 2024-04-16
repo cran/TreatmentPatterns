@@ -22,14 +22,11 @@
 #' 
 #' createSunburstPlot(treatmentPatwhays)
 createSunburstPlot <- function(treatmentPathways, groupCombinations = FALSE, ...) {
+  validateCreateSunburstPlot()
   treatmentPathways <- doGroupCombinations(
     treatmentPathways = treatmentPathways,
     groupCombinations = groupCombinations
   )
-  
-  if (is.null(colors)) {
-    colors <- getColorPalette(treatmentPathways)
-  }
   
   sunburstR::sunburst(
     data = treatmentPathways,
@@ -37,6 +34,7 @@ createSunburstPlot <- function(treatmentPathways, groupCombinations = FALSE, ...
     ...
   )
 }
+
 
 #' createSunburstPlot2
 #' 
@@ -62,6 +60,34 @@ createSunburstPlot <- function(treatmentPathways, groupCombinations = FALSE, ...
 #' 
 #' createSunburstPlot2(treatmentPatwhays)
 createSunburstPlot2 <- function(treatmentPathways, groupCombinations = FALSE, ...) {
-  warning("`createSunburstPlot2()` is deprecated, please use `createSunburstPlot()`")
+  warning(
+    "`createSunburstPlot2()` is deprecated, please use `createSunburstPlot()`\n`createSunburstPlot2()` will be removed in 2.7.0"
+  )
   TreatmentPatterns::createSunburstPlot(treatmentPathways, groupCombinations, ...)
+}
+
+
+validateCreateSunburstPlot <- function() {
+  args <- eval(
+    expr = expression(mget(names(formals()))),
+    envir = sys.frame(sys.nframe() - 1)
+  )
+
+  assertCol <- checkmate::makeAssertCollection()
+  checkmate::assertNames(
+    x = names(args$treatmentPathways),
+    type = "named",
+    must.include = c("path", "freq"),
+    .var.name = "treatmentPathways"
+  )
+
+  checkmate::assertLogical(
+    x = args$groupCombinations,
+    len = 1,
+    null.ok = FALSE,
+    add = assertCol,
+    .var.name = "groupCombinations"
+  )
+
+  checkmate::reportAssertions(assertCol)
 }

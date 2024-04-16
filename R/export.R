@@ -65,15 +65,14 @@
 #'   DBI::dbDisconnect(con, shutdown = TRUE)
 #' }
 #' }
-export <- function(andromeda, outputPath, ageWindow = 10, minCellCount = 5, censorType = "minCellCount", archiveName = NULL) {
-  collection <- checkmate::makeAssertCollection()
-  checkmate::assertTRUE(Andromeda::isAndromeda(andromeda), add = collection)
-  checkmate::assertPathForOutput(outputPath, overwrite = TRUE, add = collection)
-  checkmate::assertIntegerish(ageWindow, min.len = 1, any.missing = FALSE, unique = TRUE, add = collection)
-  checkmate::assertIntegerish(minCellCount, len = 1, lower = 1, add = collection)
-  checkmate::assertChoice(censorType, choices = c("minCellCount", "remove", "mean"))
-  checkmate::assertCharacter(archiveName, len = 1, add = collection, null.ok = TRUE)
-  checkmate::reportAssertions(collection)
+export <- function(
+    andromeda,
+    outputPath,
+    ageWindow = 10,
+    minCellCount = 5,
+    censorType = "minCellCount",
+    archiveName = NULL) {
+  validateExport()
   
   nrows <- andromeda$treatmentHistory %>%
     dplyr::summarize(n()) %>%
@@ -139,9 +138,9 @@ export <- function(andromeda, outputPath, ageWindow = 10, minCellCount = 5, cens
   
   if (!is.null(archiveName)) {
     zipPath <- file.path(outputPath, archiveName)
-    
+
     message(sprintf("Zipping files to %s", zipPath))
-    
+
     utils::zip(
       zipfile = zipPath,
       files = c(
@@ -155,6 +154,60 @@ export <- function(andromeda, outputPath, ageWindow = 10, minCellCount = 5, cens
     )
   }
   return(invisible(NULL))
+}
+
+validateExport <- function() {
+  args <- eval(
+    expr = expression(mget(names(formals()))),
+    envir = sys.frame(sys.nframe() - 1)
+  )
+
+  assertCol <- checkmate::makeAssertCollection()
+  checkmate::assertTRUE(
+    x = Andromeda::isAndromeda(args$andromeda),
+    add = assertCol,
+    .var.name = "andromeda"
+  )
+
+  checkmate::assertPathForOutput(
+    x = args$outputPath,
+    overwrite = TRUE,
+    add = assertCol,
+    .var.name = "outputPath"
+  )
+
+  checkmate::assertIntegerish(
+    x = args$ageWindow,
+    min.len = 1,
+    any.missing = FALSE,
+    unique = TRUE,
+    add = assertCol,
+    .var.name = "ageWindow"
+  )
+
+  checkmate::assertIntegerish(
+    x = args$minCellCount,
+    len = 1,
+    lower = 1,
+    add = assertCol,
+    .var.name = "minCellCount"
+  )
+
+  checkmate::assertChoice(
+    x = args$censorType,
+    choices = c("minCellCount", "remove", "mean"),
+    .var.name = "censorType"
+  )
+
+  checkmate::assertCharacter(
+    x = args$archiveName,
+    len = 1,
+    add = assertCol,
+    null.ok = TRUE,
+    .var.name = "archiveName"
+  )
+
+  checkmate::reportAssertions(assertCol)
 }
 
 #' computeStatsTherapy

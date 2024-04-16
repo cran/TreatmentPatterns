@@ -4,9 +4,10 @@
 #' R6 ShinyApp class.
 #' 
 #' @field namespace Namespace of the shiny application.
-#' @field inputHandler R6 InputHandler.
-#' @field interactivePlots R6 InteractivePlots (Sunburst and Sankey).
-#' @field characterizationPlots R6 CharacterizationPlots.
+#' @field inputHandler R6 InputHandler module.
+#' @field sunburstPlot R6 sunburstPlot module.
+#' @field sankeyDiagram R6 sankeyDiagram module.
+#' @field characterizationPlots R6 CharacterizationPlots module.
 #' 
 #' @noRd
 ShinyApp <- R6::R6Class(
@@ -23,7 +24,8 @@ ShinyApp <- R6::R6Class(
     initialize = function(namespace) {
       private$.namespace <- namespace
       private$.inputHandler <- TreatmentPatterns::InputHandler$new(private$.namespace)
-      private$.interactivePlots <- TreatmentPatterns::InteractivePlots$new(private$.namespace)
+      private$.sunburstPlot <- TreatmentPatterns::SunburstPlot$new(private$.namespace)
+      private$.sankeyDiagram <- TreatmentPatterns::SankeyDiagram$new(private$.namespace)
       private$.characterizationPlots <- TreatmentPatterns::CharacterizationPlots$new(private$.namespace)
       return(invisible(self))
     },
@@ -56,7 +58,8 @@ ShinyApp <- R6::R6Class(
       shinydashboard::dashboardSidebar(
         shinydashboard::sidebarMenu(
           private$.inputHandler$uiMenu(),
-          private$.interactivePlots$uiMenu(),
+          private$.sunburstPlot$uiMenu(tabName = "sunburst"),
+          private$.sankeyDiagram$uiMenu(tabName = "sankey"),
           private$.characterizationPlots$uiMenu()
         ),
         private$.inputHandler$uiDatabaseSelector()
@@ -71,7 +74,8 @@ ShinyApp <- R6::R6Class(
       shinydashboard::dashboardBody(
         shinydashboard::tabItems(
           private$.inputHandler$uiBody(),
-          private$.interactivePlots$uiBody(),
+          private$.sunburstPlot$uiBody(tabName = "sunburst"),
+          private$.sankeyDiagram$uiBody(tabName = "sankey"),
           private$.characterizationPlots$uiBody()
         )
       )
@@ -85,7 +89,8 @@ ShinyApp <- R6::R6Class(
       shiny::moduleServer(private$.namespace, function(input, output, session) {
         private$.inputHandler$setDataPath(tag = "uploadField", input = input, path = NULL)
         private$.inputHandler$server(input, output, session)
-        private$.interactivePlots$server(input, output, session, private$.inputHandler)
+        private$.sunburstPlot$server(input, output, session, private$.inputHandler)
+        private$.sankeyDiagram$server(input, output, session, private$.inputHandler)
         private$.characterizationPlots$server(input, output, session, private$.inputHandler)
       })
     }
@@ -96,7 +101,8 @@ ShinyApp <- R6::R6Class(
     ## Fields ----
     .namespace = "",
     .inputHandler = NULL,
-    .interactivePlots = NULL,
+    .sunburstPlot = NULL,
+    .sankeyDiagram = NULL,
     .characterizationPlots = NULL,
     
     ## Methods ----
@@ -107,7 +113,8 @@ ShinyApp <- R6::R6Class(
   active = list(
     namespace = function() return(private$.namespace),
     inputHandler = function() return(private$.inputHandler),
-    interactivePlots = function() return(private$.interactivePlots),
+    sunburstPlot = function() return(private$.sunburstPlot),
+    sankeyDiagram = function() return(private$.sankeyDiagram),
     characterizationPlots = function() return(private$.characterizationPlots)
   )
 )

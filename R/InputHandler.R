@@ -1,5 +1,7 @@
 #' @title InputHandler
 #'
+#' @include ShinyModule.R
+#'
 #' @description
 #' Class to handle input from the user. Supports direct paths or input fields
 #' through `setDataPath()`.\cr\cr
@@ -10,7 +12,7 @@
 #' @export
 InputHandler <- R6::R6Class(
   classname = "InputHandler",
-  inherit = Module,
+  inherit = ShinyModule,
   
   # Public ----
   public = list(
@@ -147,16 +149,35 @@ InputHandler <- R6::R6Class(
     
     ### Server ----
     fetchFile = function(fileName) {
-      n <- length(private$.reactiveValues$dataPath)
-      
-      lapply(seq_len(n), function(i) {
-        read.csv(unzip(
-          zipfile = private$.reactiveValues$dataPath[[i]],
-          files = fileName, exdir = tempdir()
-        )) %>%
-          dplyr::mutate(db = private$.reactiveValues$dbNames[[i]])
-      }) %>%
-        dplyr::bind_rows()
+      #browser()
+      pairedList <- mapply(list, self$reactiveValues$dataPath, self$reactiveValues$dbNames)
+      lapply(seq(1, length(pairedList), 2), function(i) {
+        path <- pairedList[[i]]
+        db <- pairedList[[i + 1]]
+        if (endsWith(path, ".zip")) {
+          return(private$fetchZip(fileName, path, db))
+        } else if (dir.exists(path)) {
+          return(private$fetchCSV(fileName, path, db))
+        } else {
+          return(NULL)
+        }
+      }) %>% dplyr::bind_rows()
+    },
+    
+    fetchZip = function(fileName, path, db) {
+      read.csv(unzip(
+        zipfile = path,
+        files = fileName,
+        exdir = tempdir()
+      )) %>%
+      dplyr::mutate(db = db) %>%
+      dplyr::bind_rows()
+    },
+
+    fetchCSV = function(fileName, path, db) {
+      read.csv(file.path(path, fileName)) %>%
+        dplyr::mutate(db = db) %>%
+      dplyr::bind_rows()
     },
     
     fetchTreatmentPathways = function() {

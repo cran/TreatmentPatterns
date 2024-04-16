@@ -5,20 +5,25 @@ library(dplyr)
 library(TreatmentPatterns)
 
 test_that("InteracivePlots", {
-  interactivePlots <- InteractivePlots$new("app")
-  expect_true(is.R6(interactivePlots))
+  sunburst <- SunburstPlot$new("app")
+  sankey <- SankeyDiagram$new("app")
+  expect_true(is.R6(sunburst))
+  expect_true(is.R6(sankey))
 })
 
 test_that("UI", {
-  interactivePlots <- InteractivePlots$new("app")
+  sunburst <- SunburstPlot$new("app")
+  sankey <- SankeyDiagram$new("app")
 
-  expect_s3_class(interactivePlots$uiBody(), "shiny.tag")
-  expect_s3_class(interactivePlots$uiMenu(), "shiny.tag")
+  expect_s3_class(sunburst$uiBody(), "shiny.tag")
+  expect_s3_class(sunburst$uiMenu(), "shiny.tag")
+  
+  expect_s3_class(sankey$uiBody(), "shiny.tag")
+  expect_s3_class(sankey$uiMenu(), "shiny.tag")
 })
 
-
 test_that("server: inputs", {
-  moduleInteractivePlots <- function(id, inputHandler, interactivePlots) {
+  moduleInteractivePlots <- function(id, inputHandler, sunburst, sankey) {
     moduleServer(id, function(input, output, session) {
       inputHandler$setDataPath(input = input, path = NULL)
       
@@ -28,11 +33,22 @@ test_that("server: inputs", {
         uploadField = list(
           datapath = path,
           name = "output.zip"
-        )
+        ),
+
+        noneOptionSunburstPlot = TRUE,
+        ageOptionSunburstPlot = "all",
+        sexOptionSunburstPlot = "all",
+        indexYearOptionSunburstPlot = "all",
+
+        noneOptionSankeyDiagram = TRUE,
+        ageOptionSankeyDiagram = "all",
+        sexOptionSankeyDiagram = "all",
+        indexYearOptionSankeyDiagram = "all"
       )
       
       inputHandler$server(input, output, session)
-      interactivePlots$server(input, output, session, inputHandler)
+      sunburst$server(input, output, session, inputHandler)
+      sankey$server(input, output, session, inputHandler)
       
       uiOutput(NS(id, "sunburst"))
       uiOutput(NS(id, "sankey"))
@@ -43,7 +59,8 @@ test_that("server: inputs", {
     app = moduleInteractivePlots,
     args = list(
       inputHandler = InputHandler$new("app"),
-      interactivePlots = InteractivePlots$new("app")), {
+      sunburst = SunburstPlot$new("app"),
+      sankey = SankeyDiagram$new("app")), {
         # Regular inputs
         session$setInputs(
           dbSelector = "output.zip",
@@ -52,9 +69,10 @@ test_that("server: inputs", {
           indexYearOption = "all",
           noneOption = TRUE
         )
+
         expect_s3_class(output$sunburst$html, "html")
         expect_s3_class(output$sankey$html, "html")
-        
+
         # Sex / Age / IndexYear = NULL
         session$setInputs(
           dbSelector = "output.zip",
@@ -63,7 +81,7 @@ test_that("server: inputs", {
           indexYearOption = NULL,
           noneOption = TRUE
         )
-        
+
         expect_s3_class(output$sunburst$html, "html")
         expect_s3_class(output$sankey$html, "html")
     }

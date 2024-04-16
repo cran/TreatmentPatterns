@@ -91,6 +91,12 @@ computePathways <- function(
     minPostCombinationDuration = 30,
     filterTreatments = "First",
     maxPathLength = 5) {
+  validateComputePathways()
+  
+  args <- eval(
+    expr = expression(mget(names(formals()))),
+    envir = sys.frame(sys.nframe())
+  )
   
   cdmInterface <- CDMInterface$new(
     connectionDetails = connectionDetails,
@@ -99,34 +105,249 @@ computePathways <- function(
     tempEmulationSchema = tempEmulationSchema,
     cdm = cdm
   )
-  
+
   withr::defer({
     cdmInterface$disconnect()
   })
-  
-  pathwayConstructor <- PathwayConstructor$new(
+
+  andromeda <- Andromeda::andromeda()
+  andromeda <- cdmInterface$fetchMetadata(andromeda)
+  andromeda <- cdmInterface$fetchCohortTable(
     cohorts = cohorts,
     cohortTableName = cohortTableName,
-    cdmInterface = cdmInterface
+    andromeda = andromeda,
+    andromedaTableName = "cohortTable",
+    minEraDuration = minEraDuration
   )
-
-  pathwayConstructor$editSettings(
-    includeTreatments = includeTreatments,
-    periodPriorToIndex = periodPriorToIndex,
-    minEraDuration = minEraDuration,
-    splitEventCohorts = splitEventCohorts,
-    splitTime = splitTime,
-    eraCollapseSize = eraCollapseSize,
-    combinationWindow = combinationWindow,
-    minPostCombinationDuration = minPostCombinationDuration,
-    filterTreatments = filterTreatments,
-    maxPathLength = maxPathLength
+  
+  checkCohortTable(andromeda)
+  
+  andromeda$cohortTable <- andromeda$cohortTable %>%
+    dplyr::rename(
+      cohortId = "cohort_definition_id",
+      personId = "subject_id",
+      startDate = "cohort_start_date",
+      endDate = "cohort_end_date"
+    )
+  
+  andromeda <- constructPathways(
+    settings = args,
+    andromeda = andromeda
   )
-  pathwayConstructor$construct()
-  andromeda <- pathwayConstructor$getAndromeda()
 
   andromeda$metadata <- andromeda$metadata %>%
     dplyr::collect() %>%
     dplyr::mutate(execution_end_date = as.character(Sys.Date()))
   return(andromeda)
+}
+
+
+validateComputePathways <- function() {
+  args <- eval(
+    # Expression to get names of function arguments in current function
+    expr = expression(mget(names(formals()))),
+    # Run expression in function that calls `validateComputePathways`
+    envir = sys.frame(sys.nframe() - 1)
+  )
+  
+  if (args$minEraDuration > args$minPostCombinationDuration) {
+    warning("The `minPostCombinationDuration` is set lower than the `minEraDuration`, this might result in unexpected behavior")
+  }
+  
+  if (args$minEraDuration > args$combinationWindow) {
+    warning("The `combinationWindow` is set lower than the `minEraDuration`, this might result in unexpected behavior")
+  }
+  
+  assertCol <- checkmate::makeAssertCollection()
+  
+  checkmate::assertCharacter(
+    args$includeTreatments,
+    len = 1,
+    add = assertCol,
+    .var.name = "includeTreatments"
+  )
+  
+  checkmate::assertSubset(
+    args$includeTreatments,
+    choices = c("startDate", "endDate"),
+    add = assertCol,
+    .var.name = "includeTreatments"
+  )
+  
+  checkmate::assertNumeric(
+    args$periodPriorToIndex,
+    len = 1,
+    finite = TRUE,
+    null.ok = FALSE,
+    add = assertCol,
+    .var.name = "periodPriorToIndex"
+  )
+  
+  checkmate::assertNumeric(
+    x = args$minEraDuration,
+    lower = 0,
+    finite = TRUE,
+    len = 1,
+    null.ok = FALSE,
+    add = assertCol,
+    .var.name = "minEraDuration"
+  )
+  
+  checkmate::assertIntegerish(
+    x = args$splitEventCohorts,
+    null.ok = TRUE,
+    add = assertCol,
+    .var.name = "splitEventCohorts"
+  )
+  
+  checkmate::assertIntegerish(
+    x = args$splitTime,
+    lower = 0,
+    null.ok = TRUE,
+    add = assertCol,
+    .var.name = "splitTime"
+  )
+  
+  checkmate::assertNumeric(
+    x = args$eraCollapseSize,
+    lower = 0,
+    finite = TRUE,
+    len = 1,
+    null.ok = FALSE,
+    add = assertCol,
+    .var.name = "eraCollapseSize"
+  )
+  
+  checkmate::assertNumeric(
+    x = args$combinationWindow,
+    lower = 0,
+    finite = TRUE,
+    len = 1,
+    null.ok = FALSE,
+    add = assertCol,
+    .var.name = "combinationWindow"
+  )
+  
+  checkmate::assertNumeric(
+    x = args$minPostCombinationDuration,
+    lower = 0,
+    finite = TRUE,
+    len = 1,
+    null.ok = FALSE,
+    add = assertCol,
+    .var.name = "minPostCombinationDuration"
+  )
+  
+  checkmate::assertCharacter(
+    x = args$filterTreatments,
+    len = 1,
+    add = assertCol,
+    .var.name = "filterTreatments"
+  )
+  
+  checkmate::assertSubset(
+    x = args$filterTreatments,
+    choices = c("First", "Changes", "All"),
+    add = assertCol,
+    .var.name = "filterTreatments"
+  )
+  
+  checkmate::assertNumeric(
+    x = args$maxPathLength,
+    lower = 0,
+    upper = 5,
+    finite = TRUE,
+    len = 1,
+    null.ok = FALSE,
+    add = assertCol,
+    .var.name = "maxPathLength"
+  )
+  
+  checkmate::assertDataFrame(
+    x = args$cohorts,
+    types = c("integerish", "character", "character"),
+    any.missing = FALSE,
+    all.missing = FALSE,
+    ncols = 3,
+    min.rows = 1,
+    col.names = "named",
+    add = assertCol,
+    .var.name = "cohorts"
+  )
+  
+  checkmate::assertSubset(
+    x = names(args$cohorts),
+    choices = c("cohortId", "cohortName", "type"),
+    add = assertCol,
+    .var.name = "cohorts"
+  )
+  
+  checkmate::assertSubset(
+    x = args$cohorts$type,
+    choices = c("event", "target", "exit"),
+    add = assertCol,
+    .var.name = "cohorts"
+  )
+  
+  checkmate::assertCharacter(
+    x = args$cohortTableName,
+    len = 1,
+    null.ok = FALSE,
+    .var.name = "cohortTableName"
+  )
+  
+  checkmate::assertClass(
+    x = args$connectionDetails,
+    classes = "ConnectionDetails",
+    null.ok = TRUE,
+    add = assertCol,
+    .var.name = "connectionDetails"
+  )
+  
+  checkmate::assertCharacter(
+    x = args$connectionDetails$dbms,
+    len = 1,
+    null.ok = TRUE,
+    add = assertCol,
+    .var.name = "connectionDetails"
+  )
+  
+  checkmate::assertCharacter(
+    args$cdmDatabaseSchema,
+    null.ok = TRUE,
+    len = 1,
+    add = assertCol,
+    .var.name = "cdmDatabaseSchema"
+  )
+  
+  checkmate::assertCharacter(
+    args$resultSchema,
+    null.ok = TRUE,
+    len = 1,
+    add = assertCol,
+    .var.name = "resultSchema"
+  )
+  
+  checkmate::assertClass(
+    args$cdm,
+    classes = "cdm_reference",
+    null.ok = TRUE,
+    add = assertCol,
+    .var.name = "cdm"
+  )
+  
+  checkmate::reportAssertions(collection = assertCol)
+}
+
+checkCohortTable = function(andromeda) {
+  cohortTableHead <- andromeda[["cohortTable"]] %>%
+    head() %>%
+    dplyr::collect()
+  
+  assertions <- checkmate::makeAssertCollection()
+  checkmate::assertIntegerish(cohortTableHead$cohort_definition_id, add = assertions)
+  checkmate::assertIntegerish(cohortTableHead$subject_id, add = assertions)
+  checkmate::assertDate(cohortTableHead$cohort_start_date, add = assertions)
+  checkmate::assertDate(cohortTableHead$cohort_end_date, add = assertions)
+  checkmate::reportAssertions(assertions)
 }

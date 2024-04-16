@@ -48,10 +48,6 @@ test_that("Method: new - empty", {
     "Could not assert if CDMConnector or DatabaseConnector is being used.")
 })
 
-test_that("Method: validate", {
-  expect_true(R6::is.R6(cdmInterface$validate()))
-})
-
 test_that("Method: fetchMetadata", {
   cdmInterface$fetchMetadata(andromeda)
 

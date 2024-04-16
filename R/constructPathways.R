@@ -5,31 +5,16 @@
 #' @noRd
 #'
 #' @param settings (`data.frame`)
-#' @param cohorts (`data.frame`)
 #' @param andromeda (`Andromeda::andromeda()`)
 #'
 #' @return `invisible(NULL)`
-constructPathways <- function(
-    settings,
-    cohorts,
-    andromeda) {
-  targetCohortIds <- cohorts %>%
-    filter(.data$type == "target") %>%
-    select("cohortId") %>%
-    pull()
-  eventCohortIds <- cohorts %>%
-    filter(.data$type == "event") %>%
-    select("cohortId") %>%
-    pull()
-  exitCohortIds <- cohorts %>%
-    filter(.data$type == "exit") %>%
-    select("cohortId") %>%
-    pull()
-
-  andromeda$cohorts <- cohorts %>%
+constructPathways <- function(settings, andromeda) {
+  andromeda$cohorts <- settings$cohorts %>%
     as.data.frame()
-
-  message(sprintf("Constructing treatment pathways: %s", settings$studyName))
+  
+  targetCohortIds <- getCohortIds(cohorts = settings$cohorts, cohortType = "target")
+  eventCohortIds <- getCohortIds(cohorts = settings$cohorts, cohortType = "event")
+  exitCohortIds <- getCohortIds(cohorts = settings$cohorts, cohortType = "exit")
 
   selectPeople <- andromeda$cohortTable %>%
     dplyr::filter(.data$cohortId == targetCohortIds) %>%
@@ -147,6 +132,12 @@ constructPathways <- function(
   
   message("constructPathways done.")
   return(andromeda)
+}
+
+getCohortIds <- function(cohorts, cohortType) {
+  cohorts %>%
+    dplyr::filter(.data$type == cohortType) %>%
+    dplyr::pull(.data$cohortId)
 }
 
 #' createTreatmentHistory

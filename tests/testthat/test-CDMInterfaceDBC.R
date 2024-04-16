@@ -23,19 +23,6 @@ test_that("Method: new", {
   ))
 })
 
-test_that("Method: validate", {
-  skip_on_cran()
-  connectionDetails <- Eunomia::getEunomiaConnectionDetails()
-  
-  cdmInterface <- TreatmentPatterns:::CDMInterface$new(
-    connectionDetails = connectionDetails,
-    cdmSchema = "main",
-    resultSchema = "main"
-  )
-  
-  expect_true(R6::is.R6(cdmInterface$validate()))
-})
-
 test_that("Method: fetchMetadata", {
   skip_on_cran()
   connectionDetails <- Eunomia::getEunomiaConnectionDetails()

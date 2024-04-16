@@ -2,8 +2,9 @@
 
 export(CharacterizationPlots)
 export(InputHandler)
-export(InteractivePlots)
-export(Module)
+export(SankeyDiagram)
+export(ShinyModule)
+export(SunburstPlot)
 export(computePathways)
 export(createSankeyDiagram)
 export(createSankeyDiagram2)

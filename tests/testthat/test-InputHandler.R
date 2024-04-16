@@ -91,3 +91,58 @@ test_that("InputHandler: server()", {
     }
   )
 })
+
+test_that("server: dir and zip-file", {
+  moduleInteractivePlots <- function(id, inputHandler, sunburst, sankey) {
+    moduleServer(id, function(input, output, session) {
+      inputHandler$setDataPath(input = input, path = NULL)
+      
+      pathZip <- system.file(package = "TreatmentPatterns", "DummyOutput", "output.zip")
+      pathCsv <- system.file(package = "TreatmentPatterns", "DummyOutput")
+      
+      session$setInputs(
+        uploadField = list(
+          datapath = c(pathZip, pathCsv),
+          name = c("output.zip", "DummyOutput")
+        ),
+        
+        noneOptionSunburstPlot = TRUE,
+        ageOptionSunburstPlot = "all",
+        sexOptionSunburstPlot = "all",
+        indexYearOptionSunburstPlot = "all",
+        
+        noneOptionSankeyDiagram = TRUE,
+        ageOptionSankeyDiagram = "all",
+        sexOptionSankeyDiagram = "all",
+        indexYearOptionSankeyDiagram = "all"
+      )
+      
+      inputHandler$server(input, output, session)
+      sunburst$server(input, output, session, inputHandler)
+      sankey$server(input, output, session, inputHandler)
+      
+      uiOutput(NS(id, "sunburst"))
+      uiOutput(NS(id, "sankey"))
+    })
+  }
+  
+  testServer(
+    app = moduleInteractivePlots,
+    args = list(
+      inputHandler = InputHandler$new("app"),
+      sunburst = SunburstPlot$new("app"),
+      sankey = SankeyDiagram$new("app")), {
+        # Regular inputs
+        session$setInputs(
+          dbSelector = c("output.zip", "DummyOutput"),
+          sexOption = "all",
+          ageOption = "all",
+          indexYearOption = "all",
+          noneOption = TRUE
+        )
+        
+        expect_s3_class(output$sunburst$html, "html")
+        expect_s3_class(output$sankey$html, "html")
+      }
+  )
+})
