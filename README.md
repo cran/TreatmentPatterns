@@ -7,7 +7,7 @@
 
 [![R-CMD-check](https://github.com/darwin-eu-dev/TreatmentPatterns/actions/workflows/R-CMD-check.yaml/badge.svg?branch=dev)](https://github.com/darwin-eu-dev/TreatmentPatterns/actions/workflows/R-CMD-check.yaml)
 
-![CRAN](https://www.r-pkg.org/badges/version/TreatmentPatterns)
+[![CRAN](https://www.r-pkg.org/badges/version/TreatmentPatterns)](https://CRAN.R-project.org/package=TreatmentPatterns)
 [![Codecov test
 coverage](https://codecov.io/gh/darwin-eu-dev/TreatmentPatterns/branch/master/graph/badge.svg)](https://app.codecov.io/gh/darwin-eu-dev/TreatmentPatterns?branch=master)
 

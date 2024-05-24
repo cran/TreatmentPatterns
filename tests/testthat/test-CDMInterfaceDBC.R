@@ -1,30 +1,28 @@
 library(testthat)
 library(TreatmentPatterns)
 library(dplyr)
-require("Eunomia", character.only = TRUE, quietly = TRUE)
+library(Eunomia)
 library(DatabaseConnector)
 
 test_that("Method: new", {
-  skip_on_cran()
+  skip("Eunomia [2.0.0] bug")
   connectionDetails <- Eunomia::getEunomiaConnectionDetails()
-  
+
   cdmInterface <- TreatmentPatterns:::CDMInterface$new(
     connectionDetails = connectionDetails,
     cdmSchema = "main",
     resultSchema = "main"
   )
-  
+
   expect_true(R6::is.R6(
-    TreatmentPatterns:::CDMInterface$new(
-      connectionDetails = connectionDetails,
-      cdmSchema = "main",
-      resultSchema = "main"
-    )
+    cdmInterface
   ))
+  
+  cdmInterface$disconnect()
 })
 
 test_that("Method: fetchMetadata", {
-  skip_on_cran()
+  skip("Eunomia [2.0.0] bug")
   connectionDetails <- Eunomia::getEunomiaConnectionDetails()
   
   cdmInterface <- TreatmentPatterns:::CDMInterface$new(
@@ -48,12 +46,11 @@ test_that("Method: fetchMetadata", {
   expect_identical(metadata$platform, base::version$platform)
   expect_identical(nrow(metadata), 1L)
   expect_identical(ncol(metadata), 8L)
+  cdmInterface$disconnect()
 })
 
 test_that("Method: fetchCohortTable", {
-  skip_on_cran()
-  # skip_on_ci()
-  
+  skip("Eunomia [2.0.0] bug")
   globals <- generateCohortTableCG()
   
   andromeda <- Andromeda::andromeda()
@@ -73,13 +70,13 @@ test_that("Method: fetchCohortTable", {
     minEraDuration = 0
   )
 
+  cdmInterface$disconnect()
+  
   expect_equal(names(andromeda), andromedaTableName)
 })
 
 test_that("fetchCohortTable: empty", {
-  skip_on_cran()
-  # skip_on_ci()
-  
+  skip("Eunomia [2.0.0] bug")
   globals <- generateCohortTableCG()
   
   andromeda <- Andromeda::andromeda()
@@ -107,13 +104,15 @@ test_that("fetchCohortTable: empty", {
   )
   
   res <- andromeda[[andromedaTableName]] %>% dplyr::collect()
-  
+
+  cdmInterface$disconnect()
+
   expect_identical(ncol(res), 6L)
   expect_identical(nrow(res), 0L)
 })
 
 test_that("Method: disconnect", {
-  skip_on_cran()
+  skip("Eunomia [2.0.0] bug")
   connectionDetails <- Eunomia::getEunomiaConnectionDetails()
   
   cdmInterface <- TreatmentPatterns:::CDMInterface$new(

@@ -1,3 +1,9 @@
+# TreatmentPatterns 2.6.7
+---------
+* Updated URLs in description
+* Updated examples to fix compatibility with CDMConnector >1.4.0
+* Updated so more tests run on CRAN
+
 # TreatmentPatterns 2.6.6
 ---------
 * Internal update to shinyApp.

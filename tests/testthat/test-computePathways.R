@@ -6,9 +6,8 @@ library(stringr)
 library(CDMConnector)
 
 test_that("computePathways DatabaseConnector", {
-  testthat::skip_on_cran()
-  testthat::skip_on_ci()
-  
+  skip("Eunomia [2.0.0] bug")
+
   globals <- generateCohortTableCG()
   
   expect_message(
@@ -30,7 +29,6 @@ test_that("computePathways DatabaseConnector", {
 })
 
 test_that("computePathways CDMConnector", {
-  testthat::skip_on_cran()
   globals <- generateCohortTableCDMC()
   
   expect_message(
@@ -52,8 +50,6 @@ test_that("computePathways CDMConnector", {
 })
 
 test_that("nrow exitCohorts > 0", {
-  skip_on_cran()
-  skip_on_ci()
   globals <- generateCohortTableCDMC()
   
   cohorts <- globals$cohorts %>%
@@ -73,8 +69,7 @@ test_that("nrow exitCohorts > 0", {
 })
 
 test_that("nrow exitCohorts > 0", {
-  skip_on_cran()
-  skip_on_ci()
+  skip("Eunomia [2.0.0] bug")
   globals <- generateCohortTableCG()
   
   cohorts <- globals$cohorts %>%
@@ -97,7 +92,6 @@ test_that("nrow exitCohorts > 0", {
 
 # Parameter sweep ----
 test_that("includeTreatments", {
-  skip_on_cran()
   globals <- generateCohortTableCDMC()
 
   andromeda_startDate <- computePathways(
@@ -141,8 +135,6 @@ test_that("includeTreatments", {
 })
 
 test_that("periodPriorToIndex", {
-  skip_on_cran()
-  
   globals <- generateCohortTableCDMC()
   
   expect_error(
@@ -157,8 +149,6 @@ test_that("periodPriorToIndex", {
 })
 
 test_that("minEraDuration", {
-  testthat::skip_on_cran()
-  
   globals <- generateCohortTableCDMC()
   
   expect_error(
@@ -173,7 +163,6 @@ test_that("minEraDuration", {
 })
 
 test_that("splitEventCohorts", {
-  skip_on_cran()
   globals <- generateCohortTableCDMC()
   
   andromeda_empty <- computePathways(
@@ -211,8 +200,6 @@ test_that("splitEventCohorts", {
 })
 
 test_that("splitTime", {
-  testthat::skip_on_cran()
-  
   globals <- generateCohortTableCDMC()
   
   expect_error(
@@ -227,7 +214,6 @@ test_that("splitTime", {
 })
 
 test_that("eraCollapseSize", {
-  skip_on_cran()
   globals <- generateCohortTableCDMC()
 
   andromeda_0 <- computePathways(
@@ -259,7 +245,6 @@ test_that("eraCollapseSize", {
 })
 
 test_that("combinationWindow", {
-  skip_on_cran()
   globals <- generateCohortTableCDMC()
   
   expect_error(
@@ -387,7 +372,6 @@ test_that("minPostCombinationDuration: 30", {
 })
 
 test_that("filterTreatments", {
-  skip_on_cran()
   globals <- generateCohortTableCDMC()
 
   expect_error(

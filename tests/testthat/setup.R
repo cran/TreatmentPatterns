@@ -1,9 +1,11 @@
-withr::local_envvar(
-  R_USER_CACHE_DIR = tempfile(),
-  .local_envir = testthat::teardown_env(),
-  EUNOMIA_DATA_FOLDER = Sys.getenv("EUNOMIA_DATA_FOLDER", unset = tempfile())
-)
-
-if (require("Eunomia", character.only = TRUE, quietly = TRUE)) {
-  CDMConnector::downloadEunomiaData(overwrite = TRUE)
+if (Sys.getenv("EUNOMIA_DATA_FOLDER", "") == "") {
+  Sys.setenv("EUNOMIA_DATA_FOLDER" = tempfile("eunomiaData"))
+  dir.create(Sys.getenv("EUNOMIA_DATA_FOLDER"))
+  
+  withr::defer(
+    {
+      unlink(Sys.getenv("EUNOMIA_DATA_FOLDER"), recursive = TRUE, force = TRUE)
+    },
+    testthat::teardown_env()
+  )
 }

@@ -97,7 +97,8 @@ server <- function(input, output, session) {
 ## InteractivePlots
 Lets first create an `InteractivePlots` module object.
 ```{r InteractivePlots}
-interactivePlots <- InteractivePlots$new("app")
+sunburstPlot <- SunburstPlot$new("app")
+sankeyDiagram <- SankeyDiagram$new("app")
 ```
 
 We can now add our UI by calling the `uiMenu()` and `uiBody()` methods.
@@ -109,7 +110,8 @@ ui <- dashboardPage(
     inputHandler$uiMenu(),
     
     # InteractivePlots menu item
-    interactivePlots$uiMenu(),
+    sunburstPlot$uiMenu(),
+    sankeyDiagram$uiMenu(),
     
     # Database Selection
     inputHandler$uiDatabaseSelector()
@@ -119,7 +121,8 @@ ui <- dashboardPage(
     inputHandler$uiBody(),
     
     # InteractivePlots body
-    interactivePlots$uiBody()
+    sunburstPlot$uiBody(),
+    sankeyDiagram$uiBody()
   ))
 )
 ```
@@ -134,7 +137,8 @@ server <- function(input, output, session) {
     inputHandler$server(input, output, session)
     
     # InteracitvePlots back-end
-    interactivePlots$server(input, output, session, inputHandler)
+    sunburstPlot$server(input, output, session, inputHandler)
+    sankeyDiagram$server(input, output, session, inputHandler)
   })
 }
 ```
@@ -160,7 +164,8 @@ ui <- dashboardPage(
     inputHandler$uiMenu(),
     
     # InteractivePlots menu item
-    interactivePlots$uiMenu(),
+    sunburstPlot$uiMenu(),
+    sankeyDiagram$uiMenu(),
     
     # CharacterizationPlots menu item
     characterizationPlots$uiMenu(),
@@ -173,7 +178,8 @@ ui <- dashboardPage(
     inputHandler$uiBody(),
     
     # InteractivePlots body
-    interactivePlots$uiBody(),
+    sunburstPlot$uiBody(),
+    sankeyDiagram$uiBody(),
     
     # CharacterizationPlots body
     characterizationPlots$uiBody()
