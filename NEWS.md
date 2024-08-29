@@ -1,3 +1,12 @@
+# TreatmentPatterns 2.6.8
+---------
+* Updated some tests to work with later versions of omopgenerics.
+* Fixed issue with where combinations sometimes got miss-classified.
+* Fixed issue when event starts and ends on end-date of target.
+* Fixed issue when collapsing events when there is also a combination, when `filterTreatments = "All"`.
+* Added check in tests to only run if packages are availible. (noSuggests, M1).
+* `createSankeyDiagram()` now supports pathways over 3 levels long.
+
 # TreatmentPatterns 2.6.7
 ---------
 * Updated URLs in description

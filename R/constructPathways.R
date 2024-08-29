@@ -203,15 +203,27 @@ createTreatmentHistory <- function(
     andromeda$cohortTable <- dplyr::full_join(
       x = andromeda$eventCohorts,
       y = andromeda$targetCohorts,
-      by = dplyr::join_by("personId", y$indexDate <= x$startDate, x$startDate < y$endDate)
-    )
+      by = dplyr::join_by(
+        "personId",
+        y$indexDate <= x$startDate,
+        x$startDate <= y$endDate,
+        x$endDate <= y$endDate
+      ))
   } else if (includeTreatments == "endDate") {
     andromeda$cohortTable <- dplyr::full_join(
       x = andromeda$eventCohorts,
       y = andromeda$targetCohorts,
-      by = dplyr::join_by("personId", y$indexDate <= x$endDate, x$endDate < y$endDate)) %>%
+      by = dplyr::join_by(
+        "personId",
+        y$indexDate <= x$endDate,
+        x$endDate <= y$endDate
+      )) %>%
       dplyr::mutate(
-        startDate.x = pmax(.data$startDate.y - periodPriorToIndex, .data$startDate.x, na.rm = TRUE)
+        startDate.x = pmax(
+          .data$startDate.y - periodPriorToIndex,
+          .data$startDate.x,
+          na.rm = TRUE
+        )
       )
   }
   
@@ -327,7 +339,7 @@ doEraCollapse <- function(andromeda, eraCollapseSize) {
       dplyr::select(-"needsMerge", -"rowNumber") %>%
       dplyr::mutate(durationEra = .data$eventEndDate - .data$eventStartDate)
   } else {
-    blockEnd <- needsMerge$rowNumber[seq_len(n)] != needsMerge$rowNumber[seq_len(n)] + 1
+    blockEnd <- as.numeric(needsMerge$rowNumber[seq_len(n)] != needsMerge$rowNumber[seq_len(n)]) + 1
     needsMerge$blockId <- cumsum(blockEnd)
     needsMerge <- needsMerge %>%
       dplyr::group_by(.data$blockId) %>%
@@ -348,10 +360,21 @@ doEraCollapse <- function(andromeda, eraCollapseSize) {
         newEndDates,
         by = dplyr::join_by("rowNumber" == "startRowNumber")) %>%
       dplyr::mutate(
-        eventEndDate = if_else(
-          is.null(.data$newEndDate), 
-          .data$eventEndDate, 
-          .data$newEndDate)) %>%
+        eventEndDate = dplyr::case_when(
+          !is.na(.data$newEndDate) ~ .data$newEndDate,
+          .default = .data$eventEndDate
+        ),
+        needsMerge = dplyr::case_when(
+          !is.na(.data$newEndDate) ~ NA,
+          .default = .data$needsMerge
+        )
+      ) %>% 
+      dplyr::mutate(durationEra = .data$eventEndDate - .data$eventStartDate) %>%
+      # dplyr::mutate(
+      #   eventEndDate = if_else(
+      #     is.null(.data$newEndDate), 
+      #     .data$eventEndDate, 
+      #     .data$newEndDate)) %>%
       dplyr::filter(is.na(.data$needsMerge)) %>%
       dplyr::select(-"newEndDate", -"needsMerge", -"rowNumber") %>%
       dplyr::mutate(durationEra = .data$eventEndDate - .data$eventStartDate)
@@ -412,18 +435,21 @@ doCombinationWindow <- function(
     # treatmentHistory[r, event_end_date] ->
     # add column combination first received, first stopped
     treatmentHistory <- treatmentHistory %>%
+      dplyr::group_by(.data$personId) %>%
       dplyr::mutate(combinationFRFS = case_when(
         .data$selectedRows == 1 &
           switch == 0 &
           dplyr::lag(eventEndDate, order_by = .data$sortOrder) < eventEndDate ~ 1,
         .default = 0
-      ))
+      )) %>%
+      dplyr::ungroup()
     
     # For rows selected not in column switch ->
     # if treatmentHistory[r - 1, event_end_date] >
     # treatmentHistory[r, event_end_date] ->
     # add column combination last received, first stopped
     andromeda$treatmentHistory <- treatmentHistory %>%
+      dplyr::group_by(.data$personId) %>%
       dplyr::mutate(combinationLRFS = dplyr::case_when(
         .data$selectedRows == 1 &
           .data$switch == 0 &
@@ -432,8 +458,9 @@ doCombinationWindow <- function(
                 dplyr::lead(.data$eventEndDate, order_by = .data$sortOrder) == .data$eventEndDate &
                 dplyr::lead(.data$eventStartDate, order_by = .data$sortOrder) == .data$eventStartDate)) ~ 1,
         .default = 0
-      ))
-    
+      )) %>%
+      dplyr::ungroup()
+
     message(sprintf(
       "Selected %s \nout of %s rows\nIteration: %s\nSwitches: %s\nFRFS Combinations: %s\nLRFS Combinations: %s\n",
       andromeda$treatmentHistory %>%

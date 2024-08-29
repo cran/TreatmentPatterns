@@ -47,18 +47,34 @@ test_that("fetchCohortTable", {
   
   # check n > 1 treatments
   expect_identical(
-    aCG$cohort_table %>% group_by(.data$subject_id) %>%
-      summarize(n = n()) %>% filter(n > 1) %>% collect(),
-    aCDMC$cohort_table %>% group_by(.data$subject_id) %>%
-      summarize(n = n()) %>% filter(n > 1) %>% collect()
+    aCG$cohort_table %>%
+      group_by(.data$subject_id) %>%
+      summarize(n = n()) %>%
+      filter(n > 1) %>%
+      collect() %>%
+      mutate(subject_id = as.numeric(subject_id)),
+    aCDMC$cohort_table %>%
+      group_by(.data$subject_id) %>%
+      summarize(n = n()) %>%
+      filter(n > 1) %>%
+      collect() %>%
+      mutate(subject_id = as.numeric(subject_id))
   )
-  
+
   # check n == 1 treatments
   expect_identical(
-    aCG$cohort_table %>% group_by(.data$subject_id) %>%
-      summarize(n = n()) %>% filter(n == 1) %>% collect(),
-    aCDMC$cohort_table %>% group_by(.data$subject_id) %>%
-      summarize(n = n()) %>% filter(n == 1) %>% collect()
+    aCG$cohort_table %>%
+      group_by(.data$subject_id) %>%
+      summarize(n = n()) %>%
+      filter(n == 1) %>%
+      collect() %>%
+      mutate(subject_id = as.numeric(subject_id)),
+    aCDMC$cohort_table %>%
+      group_by(.data$subject_id) %>%
+      summarize(n = n()) %>%
+      filter(n == 1) %>%
+      collect() %>%
+      mutate(subject_id = as.numeric(subject_id))
   )
   
   dbcInterface$disconnect()

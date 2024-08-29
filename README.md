@@ -16,8 +16,7 @@ coverage](https://codecov.io/gh/darwin-eu-dev/TreatmentPatterns/branch/master/gr
 [*Markus A, Verhamme K, Kors J, Rijnbeek P (2022). “TreatmentPatterns:
 An R package to facilitate the standardized development and analysis of
 treatment patterns across disease domains.” Computer Methods and
-Programs in
-Biomedicine.*](https://www.sciencedirect.com/science/article/pii/S016926072200462X?via%3Dihub)
+Programs in Biomedicine.*](https://doi.org/10.1016/j.cmpb.2022.107081)
 
 This R package contains the resources for performing a treatment pathway
 analysis of a study population of interest in observational databases.

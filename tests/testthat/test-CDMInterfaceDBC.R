@@ -1,11 +1,10 @@
 library(testthat)
 library(TreatmentPatterns)
 library(dplyr)
-library(Eunomia)
-library(DatabaseConnector)
 
 test_that("Method: new", {
   skip("Eunomia [2.0.0] bug")
+  skip_if_not(ableToRun()$CG)
   connectionDetails <- Eunomia::getEunomiaConnectionDetails()
 
   cdmInterface <- TreatmentPatterns:::CDMInterface$new(
@@ -23,6 +22,7 @@ test_that("Method: new", {
 
 test_that("Method: fetchMetadata", {
   skip("Eunomia [2.0.0] bug")
+  skip_if_not(ableToRun()$CG)
   connectionDetails <- Eunomia::getEunomiaConnectionDetails()
   
   cdmInterface <- TreatmentPatterns:::CDMInterface$new(
@@ -51,6 +51,7 @@ test_that("Method: fetchMetadata", {
 
 test_that("Method: fetchCohortTable", {
   skip("Eunomia [2.0.0] bug")
+  skip_if_not(ableToRun()$CG)
   globals <- generateCohortTableCG()
   
   andromeda <- Andromeda::andromeda()
@@ -77,6 +78,7 @@ test_that("Method: fetchCohortTable", {
 
 test_that("fetchCohortTable: empty", {
   skip("Eunomia [2.0.0] bug")
+  skip_if_not(ableToRun()$CG)
   globals <- generateCohortTableCG()
   
   andromeda <- Andromeda::andromeda()
@@ -113,6 +115,7 @@ test_that("fetchCohortTable: empty", {
 
 test_that("Method: disconnect", {
   skip("Eunomia [2.0.0] bug")
+  skip_if_not(ableToRun()$CG)
   connectionDetails <- Eunomia::getEunomiaConnectionDetails()
   
   cdmInterface <- TreatmentPatterns:::CDMInterface$new(

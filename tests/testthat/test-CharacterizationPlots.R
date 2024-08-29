@@ -4,11 +4,13 @@ library(shiny)
 library(TreatmentPatterns)
 
 test_that("CharacterizationPlots", {
+  skip_if_not(ableToRun()$plotting)
   characterizationPlots <- CharacterizationPlots$new("app")
   expect_true(is.R6(characterizationPlots))
 })
 
 test_that("UI", {
+  skip_if_not(ableToRun()$plotting)
   characterizationPlots <- CharacterizationPlots$new("app")
   
   expect_s3_class(characterizationPlots$uiBody(), "shiny.tag")
@@ -17,6 +19,7 @@ test_that("UI", {
 
 
 test_that("server", {
+  skip_if_not(ableToRun()$plotting)
   moduleInteractivePlots <- function(id, inputHandler, characterizationPlots) {
     moduleServer(id, function(input, output, session) {
       inputHandler$setDataPath(input = input, path = NULL)

@@ -3,6 +3,7 @@ library(testthat)
 library(R6)
 
 test_that("InputHandler", {
+  skip_if_not(ableToRun()$plotting)
   ## new() / initialize() ----
   inputHandler <- InputHandler$new("app")
   expect_true(is.R6(inputHandler))
@@ -16,6 +17,7 @@ test_that("InputHandler", {
 })
 
 test_that("UI", {
+  skip_if_not(ableToRun()$plotting)
   inputHandler <- InputHandler$new("app")
   expect_s3_class(inputHandler$uiMenu(), "shiny.tag")
   expect_s3_class(inputHandler$uiBody(), "shiny.tag")
@@ -23,6 +25,7 @@ test_that("UI", {
 })
 
 test_that("InputHandler: setDataPath()", {
+  skip_if_not(ableToRun()$plotting)
   moduleInputHandler <- function(id, inputHandler) {
     shiny::moduleServer(id, function(input, output, session) {})
   }
@@ -58,6 +61,7 @@ test_that("InputHandler: setDataPath()", {
 })
 
 test_that("InputHandler: server()", {
+  skip_if_not(ableToRun()$plotting)
   moduleInputHandler <- function(id, inputHandler) {
     shiny::moduleServer(id, function(input, output, session) {
       inputHandler$setDataPath(input = input, path = NULL)
@@ -93,6 +97,7 @@ test_that("InputHandler: server()", {
 })
 
 test_that("server: dir and zip-file", {
+  skip_if_not(ableToRun()$plotting)
   moduleInteractivePlots <- function(id, inputHandler, sunburst, sankey) {
     moduleServer(id, function(input, output, session) {
       inputHandler$setDataPath(input = input, path = NULL)

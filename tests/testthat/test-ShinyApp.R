@@ -3,6 +3,7 @@ library(shiny)
 library(R6)
 
 test_that("ShinyApp", {
+  skip_if_not(ableToRun()$plotting)
   app <- TreatmentPatterns:::ShinyApp$new("app")
   
   # Fields

@@ -5,6 +5,7 @@ library(dplyr)
 library(TreatmentPatterns)
 
 test_that("InteracivePlots", {
+  skip_if_not(ableToRun()$plotting)
   sunburst <- SunburstPlot$new("app")
   sankey <- SankeyDiagram$new("app")
   expect_true(is.R6(sunburst))
@@ -12,6 +13,7 @@ test_that("InteracivePlots", {
 })
 
 test_that("UI", {
+  skip_if_not(ableToRun()$plotting)
   sunburst <- SunburstPlot$new("app")
   sankey <- SankeyDiagram$new("app")
 
@@ -23,6 +25,7 @@ test_that("UI", {
 })
 
 test_that("server: inputs", {
+  skip_if_not(ableToRun()$plotting)
   moduleInteractivePlots <- function(id, inputHandler, sunburst, sankey) {
     moduleServer(id, function(input, output, session) {
       inputHandler$setDataPath(input = input, path = NULL)

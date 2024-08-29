@@ -16,28 +16,17 @@ splitPathItems <- function(treatmentPathways) {
 }
 
 createLinks <- function(data) {
-  result1 <- data %>%
-    mutate(
-      source = paste0("1.", .data$path1),
-      target = paste0("2.", .data$path2)
-    ) %>%
-    select("source", "target", "freq")
-  
-  
-  if (suppressWarnings(!is.null(data$path3))) {
-    result2 <- data %>%
-      mutate(
-        source = paste0("2.", .data$path2),
-        target = paste0("3.", .data$path3)
-      ) %>%
-      select("source", "target", "freq")
-    
-    links <- dplyr::bind_rows(
-      result1, result2
-    )
-  } else {
-    links <- result1
-  }
+  links <- lapply(seq_len(ncol(data) - 2), function(i) {
+    df <- data[, c(i, i + 1, ncol(data))]
+    names(df) <- c("source", "target", "freq")
+    df <- df %>%
+      dplyr::mutate(
+        source = sprintf("%s.%s", i, .data$source),
+        target = sprintf("%s.%s", i + 1, .data$target)
+      )
+    return(df)
+  }) |>
+    dplyr::bind_rows()
   
   links <- links %>%
     dplyr::mutate(value = round(freq / sum(freq) * 100, 2)) %>%

@@ -2,7 +2,7 @@ Package: TreatmentPatterns
 Type: Package
 Title: Analyzes Real-World Treatment Patterns of a Study Population of
         Interest
-Version: 2.6.7
+Version: 2.6.8
 Authors@R: 
     c(person("Aniek", "Markus", , role = c("aut"), comment = c(ORCID = "0000-0001-5779-4794")),
       person("Maarten", "van Kessel", email = "m.l.vankessel@erasmusmc.nl", role = c("cre"), comment = c(ORCID = "0009-0006-8832-6030")))
@@ -35,8 +35,8 @@ Collate: 'CDMInterface.R' 'ShinyModule.R' 'CharacterizationPlots.R'
         'createSankeyDiagram.R' 'createSunburstPlot.R'
         'executeTreatmentPatterns.R' 'export.R'
 NeedsCompilation: no
-Packaged: 2024-05-24 08:02:42 UTC; mvankessel
+Packaged: 2024-08-29 08:53:56 UTC; mvankessel
 Author: Aniek Markus [aut] (<https://orcid.org/0000-0001-5779-4794>),
   Maarten van Kessel [cre] (<https://orcid.org/0009-0006-8832-6030>)
 Repository: CRAN
-Date/Publication: 2024-05-24 08:30:32 UTC
+Date/Publication: 2024-08-29 10:50:03 UTC
