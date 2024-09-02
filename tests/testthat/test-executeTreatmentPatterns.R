@@ -45,6 +45,7 @@ test_that("CohortGenerator", {
 
 test_that("CDMConnector", {
   testthat::skip_on_cran()
+  skip_if_not(ableToRun()$CDMC)
   
   globals <- generateCohortTableCDMC()
   

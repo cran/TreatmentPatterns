@@ -28,6 +28,7 @@ test_that("empty treatmentHistory table", {
 test_that("outputPath", {
   skip_on_ci()
   skip_on_cran()
+  skip_if_not(ableToRun()$CG)
   
   globals <- generateCohortTableCG()
   
@@ -75,6 +76,7 @@ test_that("outputPath", {
 test_that("ageWindow", {
   skip_on_ci()
   skip_on_cran()
+  skip_if_not(ableToRun()$CG)
   
   globals <- generateCohortTableCG()
   
@@ -124,6 +126,7 @@ test_that("ageWindow", {
 test_that("minCellCount", {
   skip_on_ci()
   skip_on_cran()
+  skip_if_not(ableToRun()$CG)
   
   globals <- generateCohortTableCG()
   
@@ -167,6 +170,7 @@ test_that("minCellCount", {
 test_that("archiveName", {
   skip_on_ci()
   skip_on_cran()
+  skip_if_not(ableToRun()$CG)
   
   globals <- generateCohortTableCG()
   
@@ -208,6 +212,7 @@ test_that("archiveName", {
 test_that("censorType", {
   skip_on_ci()
   skip_on_cran()
+  skip_if_not(ableToRun()$CG)
   
   globals <- generateCohortTableCG()
   
@@ -281,6 +286,7 @@ test_that("censorType", {
 # CDMConnector ----
 test_that("outputPath", {
   skip_on_cran()
+  skip_if_not(ableToRun()$CDMC)
   
   globals <- generateCohortTableCDMC()
   
@@ -326,6 +332,7 @@ test_that("outputPath", {
 
 test_that("ageWindow", {
   skip_on_cran()
+  skip_if_not(ableToRun()$CDMC)
   
   globals <- generateCohortTableCDMC()
   
@@ -372,6 +379,7 @@ test_that("ageWindow", {
 
 test_that("minCellCount", {
   skip_on_cran()
+  skip_if_not(ableToRun()$CDMC)
   
   globals <- generateCohortTableCDMC()
   
@@ -413,6 +421,7 @@ test_that("minCellCount", {
 
 test_that("archiveName", {
   skip_on_cran()
+  skip_if_not(ableToRun()$CDMC)
   
   globals <- generateCohortTableCDMC()
   
@@ -452,6 +461,7 @@ test_that("archiveName", {
 
 test_that("censorType", {
   skip_on_cran()
+  skip_if_not(ableToRun()$CDMC)
   
   globals <- generateCohortTableCDMC()
   
@@ -524,6 +534,7 @@ test_that("censorType", {
 
 test_that("counts", {
   skip_on_cran()
+  skip_if_not(ableToRun()$CDMC)
   
   globals <- generateCohortTableCDMC()
   

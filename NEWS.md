@@ -1,3 +1,8 @@
+# TreatmentPatterns 2.6.9
+---------
+* Disabled tests when required suggested packages are not available.
+* Updated examples to only run when required suggested packages are available.
+
 # TreatmentPatterns 2.6.8
 ---------
 * Updated some tests to work with later versions of omopgenerics.

@@ -73,10 +73,18 @@ outcomes, you can run \link[TreatmentPatterns]{computePathways} and
 }
 \examples{
 \donttest{
-library(TreatmentPatterns)
-library(CDMConnector)
-library(dplyr)
+ableToRun <- all(
+  require("CirceR", character.only = TRUE, quietly = TRUE),
+  require("CDMConnector", character.only = TRUE, quietly = TRUE),
+  require("TreatmentPatterns", character.only = TRUE, quietly = TRUE),
+  require("dplyr", character.only = TRUE, quietly = TRUE)
+)
+
 if (require("CirceR", character.only = TRUE, quietly = TRUE)) {
+  library(TreatmentPatterns)
+  library(CDMConnector)
+  library(dplyr)
+
   withr::local_envvar(
     R_USER_CACHE_DIR = tempfile(),
     EUNOMIA_DATA_FOLDER = Sys.getenv("EUNOMIA_DATA_FOLDER", unset = tempfile())

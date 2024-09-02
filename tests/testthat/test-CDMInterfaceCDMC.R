@@ -38,6 +38,7 @@ if (ableToRun()$CDMC) {
 }
 
 test_that("Method: new", {
+  skip_if_not(ableToRun()$CDMC)
   expect_true(R6::is.R6(
     TreatmentPatterns:::CDMInterface$new(cdm = localCdm)
   ))
