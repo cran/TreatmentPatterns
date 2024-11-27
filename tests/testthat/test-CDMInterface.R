@@ -23,7 +23,7 @@ test_that("fetchCohortTable", {
   
   minEraDuration <- 120
   
-  dbcInterface$fetchCohortTable(
+  x <- dbcInterface$fetchCohortTable(
     cohorts = cg$cohorts,
     cohortTableName = cg$cohortTableName,
     andromeda = aCG,
@@ -31,7 +31,7 @@ test_that("fetchCohortTable", {
     minEraDuration = minEraDuration
   )
   
-  cdmcInterface$fetchCohortTable(
+  x <- cdmcInterface$fetchCohortTable(
     cohorts = cdmc$cohorts,
     cohortTableName = cdmc$cohortTableName,
     andromeda = aCDMC,
@@ -52,13 +52,17 @@ test_that("fetchCohortTable", {
       summarize(n = n()) %>%
       filter(n > 1) %>%
       collect() %>%
-      mutate(subject_id = as.numeric(subject_id)),
+      mutate(subject_id = as.numeric(subject_id)) %>%
+      pull(n) %>%
+      sum(),
     aCDMC$cohort_table %>%
       group_by(.data$subject_id) %>%
       summarize(n = n()) %>%
       filter(n > 1) %>%
       collect() %>%
-      mutate(subject_id = as.numeric(subject_id))
+      mutate(subject_id = as.numeric(subject_id)) %>%
+      pull(n) %>%
+      sum()
   )
 
   # check n == 1 treatments
@@ -68,13 +72,17 @@ test_that("fetchCohortTable", {
       summarize(n = n()) %>%
       filter(n == 1) %>%
       collect() %>%
-      mutate(subject_id = as.numeric(subject_id)),
+      mutate(subject_id = as.numeric(subject_id)) %>%
+      pull(n) %>%
+      sum(),
     aCDMC$cohort_table %>%
       group_by(.data$subject_id) %>%
       summarize(n = n()) %>%
       filter(n == 1) %>%
       collect() %>%
-      mutate(subject_id = as.numeric(subject_id))
+      mutate(subject_id = as.numeric(subject_id)) %>%
+      pull(n) %>%
+      sum()
   )
   
   dbcInterface$disconnect()

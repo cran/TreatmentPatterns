@@ -1,3 +1,15 @@
+# TreatmentPatterns 2.7.0
+---------
+* Converted subject_id's to pseudo_subject_id's when pulling in data from the database. Actual subject_id's are stored as `character()`.
+* Added copyright statements in R-files.
+* Renamed `periodPriorToIndex` to `indexDateOffset`.
+* Added life cycle badge to ReadMe
+* Added more informative error / warning messaging when no data is available to compute pathways.
+* Extended output for event duration in pathways.
+* Renamed `summaryStatsTherapyDuration.csv` to `summaryEventDuration.csv`.
+* Updated status messaging in the console.
+* Added `attrition.csv` that capture status messaging and time stamps. 
+
 # TreatmentPatterns 2.6.9
 ---------
 * Disabled tests when required suggested packages are not available.

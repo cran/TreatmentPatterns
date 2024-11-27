@@ -39,11 +39,11 @@ test_that("computePathways CDMConnector", {
           cdm = globals$cdm,
           globals$cohortTableName
         ),
-        "After maxPathLength: 553"
+        "Records: 553"
       ),
-      "After combinationWindow: 554"
+      "Records: 554"
     ),
-    "Original number of rows: 8366"
+    "Records: 8366"
   )
   
   DBI::dbDisconnect(globals$con, shutdown = TRUE)
@@ -117,7 +117,7 @@ test_that("includeTreatments", {
   Andromeda::close(andromeda_endDate)
 })
 
-test_that("periodPriorToIndex", {
+test_that("indexDateOffset", {
   skip_if_not(ableToRun()$CDMC)
   globals <- generateCohortTableCDMC()
 
@@ -126,9 +126,49 @@ test_that("periodPriorToIndex", {
       cohorts = globals$cohorts,
       cohortTableName = globals$cohortTableName,
       cdm = globals$cdm,
-      periodPriorToIndex = "0"
+      indexDateOffset = "0"
     ),
     "Must be of type.+'numeric'"
+  )
+
+  expect_error(
+    computePathways(
+      cohorts = globals$cohorts,
+      cohortTableName = globals$cohortTableName,
+      cdm = globals$cdm,
+      indexDateOffset = Inf
+    ),
+    "Must be finite"
+  )
+
+  expect_message(
+    computePathways(
+      cohorts = globals$cohorts,
+      cohortTableName = globals$cohortTableName,
+      cdm = globals$cdm,
+      indexDateOffset = 0
+    ),
+    "Records: 8366"
+  )
+
+  expect_message(
+    computePathways(
+      cohorts = globals$cohorts,
+      cohortTableName = globals$cohortTableName,
+      cdm = globals$cdm,
+      indexDateOffset = -30
+    ),
+    "Records: 8366"
+  )
+
+  expect_message(
+    computePathways(
+      cohorts = globals$cohorts,
+      cohortTableName = globals$cohortTableName,
+      cdm = globals$cdm,
+      indexDateOffset = 30
+    ),
+    "Records: 6267"
   )
 })
 
@@ -276,7 +316,7 @@ test_that("minPostCombinationDuration: 30", {
     cohortTableName = "cohort_table",
     cdm = cdm,
     includeTreatments = "startDate",
-    periodPriorToIndex = 0,
+    indexDateOffset = 0,
     minEraDuration = 0,
     eraCollapseSize = 3,
     combinationWindow = 30,
@@ -305,7 +345,7 @@ test_that("minPostCombinationDuration: 30", {
     cohortTableName = "cohort_table",
     cdm = cdm,
     includeTreatments = "startDate",
-    periodPriorToIndex = 0,
+    indexDateOffset = 0,
     minEraDuration = 0,
     eraCollapseSize = 3,
     combinationWindow = 30,
@@ -335,7 +375,7 @@ test_that("minPostCombinationDuration: 30", {
     cohortTableName = "cohort_table",
     cdm = cdm,
     includeTreatments = "startDate",
-    periodPriorToIndex = 0,
+    indexDateOffset = 0,
     minEraDuration = 0,
     eraCollapseSize = 3,
     combinationWindow = 30,
@@ -544,7 +584,7 @@ test_that("FRFS combination", {
     cdm = cdm,
     tempEmulationSchema = NULL,
     includeTreatments = "startDate",
-    periodPriorToIndex = 0,
+    indexDateOffset = 0,
     minEraDuration = 30,
     eraCollapseSize = 30,
     combinationWindow = 30,
@@ -597,7 +637,7 @@ test_that("LRFS combination", {
     cdm = cdm,
     tempEmulationSchema = NULL,
     includeTreatments = "startDate",
-    periodPriorToIndex = 0,
+    indexDateOffset = 0,
     minEraDuration = 30,
     eraCollapseSize = 30,
     combinationWindow = 30,
@@ -617,4 +657,98 @@ test_that("LRFS combination", {
   expect_equal(nLRFS, 1)
   
   DBI::dbDisconnect(con)
+})
+
+test_that("No target records", {
+  skip_if_not(ableToRun()$CDMC)
+
+  params <- suppressWarnings(generateCohortTableCDMC())
+  
+  params$cohorts$cohortId[8] <- 9
+  
+  expect_warning({
+    outputEnv <- computePathways(
+      cohorts = params$cohorts,
+      cohortTableName = params$cohortTableName,
+      cdm = params$cdm
+    )
+  })
+  
+  expect_true(nrow(outputEnv$treatmentHistory %>% collect()) == 0)
+  
+  DBI::dbDisconnect(params$con, shutdown = TRUE)
+})
+
+test_that("Empty cohort table", {
+  skip_if_not(ableToRun()$CDMC)
+
+  params <- suppressWarnings(generateCohortTableCDMC())
+  
+  params$cdm$cohort_table <- params$cdm$cohort_table %>%
+    filter(.data$cohort_definition_id <= 0) %>%
+    compute()
+  
+  expect_warning({
+    outputEnv <- computePathways(
+      cohorts = params$cohorts,
+      cohortTableName = params$cohortTableName,
+      cdm = params$cdm
+    )
+  })
+  
+  expect_true(nrow(outputEnv$treatmentHistory %>% collect()) == 0)
+  
+  DBI::dbDisconnect(params$con, shutdown = TRUE)
+})
+
+test_that("No target defined", {
+  skip_if_not(ableToRun()$CDMC)
+
+  params <- suppressWarnings(generateCohortTableCDMC())
+  
+  params$cohorts$type <- rep("event", 8)
+  
+  expect_error({
+    outputEnv <- computePathways(
+      cohorts = params$cohorts,
+      cohortTableName = params$cohortTableName,
+      cdm = params$cdm
+    )
+  })
+
+  DBI::dbDisconnect(params$con, shutdown = TRUE)
+})
+
+test_that("Attrition", {
+  skip_on_os(os = "linux")
+  skip_if_not(ableToRun()$CDMC)
+  skip_if_not(ableToRun()$CG)
+
+  params <- suppressWarnings(generateCohortTableCDMC())
+  outputEnvCDMC <- computePathways(
+    cohorts = params$cohorts,
+    cohortTableName = params$cohortTableName,
+    cdm = params$cdm
+  )
+
+  params <- suppressWarnings(generateCohortTableCG())
+  outputEnvCG <- computePathways(
+    cohorts = params$cohorts,
+    cohortTableName = params$cohortTableName,
+    connectionDetails = params$connectionDetails,
+    cdmSchema = params$cdmSchema,
+    resultSchema = params$resultSchema
+  )
+
+  expect_identical(
+    outputEnvCDMC$attrition %>%
+      collect() %>%
+      select(-"time"),
+    outputEnvCG$attrition %>%
+      collect() %>%
+      select(-"time")
+  )
+
+  Andromeda::close(outputEnvCG)
+  Andromeda::close(outputEnvCDMC)
 })

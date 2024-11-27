@@ -167,7 +167,7 @@ Even though the default settings work well for most use cases, it might not work
 
 | Parameter | Value | Description |
 | ----- | ------ | ----------- |
-| periodPriorToIndex | 0 | Number of days prior to the index date of the target cohort that event cohorts are allowed to start |
+| indexDateOffset | 0 | Offset the index date of the `Target` cohort. |
 | minEraDuration | 0 | Minimum time an event era should last to be included in analysis |
 | eraCollapseSize | 30 | Window of time between which two eras of the same event cohort are collapsed into one era |
 | combinationWindow | 30 | Window of time two event cohorts need to overlap to be considered a combination treatment |
@@ -185,7 +185,7 @@ minEra60 <- computePathways(
   cohortTableName = "cohort_table",
   cdm = cdm,
   # Pathway settings
-  periodPriorToIndex = 0,
+  indexDateOffset = 0,
   minEraDuration = 60,
   eraCollapseSize = 30,
   combinationWindow = 30,
@@ -398,9 +398,17 @@ head(sex)
 head(year)
 ```
 ### summaryStatsTherapyDuration
-The summaryStatsTherapyDuration file contains some statistics pertaining combination and mono-therapies. Like the mean, median, minimum, and maximum durations. The standard deviation of durations, and the count of each treatment type.
+The summaryEventDuration file contains summary statistics from different events, across all found "lines". A "line" is equal to the level in the Sunburst or Sankey diagrams. The summary statistics allow for plotting of boxplots with the `plotEventDuration()` function.
 ```{r summaryStatsTherapyDuration}
-read.csv(file.path(tempDir, "default", "summaryStatsTherapyDuration.csv"))
+eventDuration <- read.csv(file.path(tempDir, "default", "summaryEventDuration.csv"))
+
+plotEventDuration(
+  eventDurations = eventDuration,
+  minCellCount = 5,
+  treatmentGroups = "both",
+  eventLines = NULL,
+  includeOverall = TRUE
+)
 ```
 
 

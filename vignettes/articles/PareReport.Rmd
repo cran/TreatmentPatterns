@@ -1,5 +1,5 @@
 ---
-title: "PaRe Report: TreatmentPatterns [2.6.6]"
+title: "PaRe Report: TreatmentPatterns [2.7.0]"
 author: "`r paste('PaRe', packageVersion('PaRe'))`"
 date: "`r Sys.Date()`"
 output:
@@ -8,7 +8,7 @@ output:
     toc_float: true
     theme: cosmo
 vignette: >
-  %\VignetteIndexEntry{TreatmentPatterns [2.6.6]}
+  %\VignetteIndexEntry{TreatmentPatterns [2.7.0]}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -171,7 +171,7 @@ DT::datatable(
 ### Check dependencies against whitelist
 ```{r checkDependencies, warning=FALSE, echo=FALSE}
 tryCatch({
-  DT::datatable(PaRe::checkDependencies(repo = repo, dependencyType = "Imports", verbose = FALSE))
+  DT::datatable(PaRe::checkDependencies(repo = repo, dependencyType = "Imports"))
 }, error = function(e) {
   message("Could not check dependencies with error:")
   message(sprintf("\t%s", e))

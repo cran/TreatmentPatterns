@@ -1,3 +1,19 @@
+# Copyright 2024 DARWIN EU®
+#
+# This file is part of TreatmentPatterns
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 #' computePathways
 #'
 #' Compute treatment patterns according to the specified parameters within
@@ -11,7 +27,7 @@
 #' @template param_resultSchema
 #' @param tempEmulationSchema Schema used to emulate temp tables
 #' @template param_includeTreatments
-#' @template param_periodPriorToIndex
+#' @template param_indexDateOffset
 #' @template param_minEraDuration
 #' @template param_splitEventCohorts
 #' @template param_splitTime
@@ -94,7 +110,7 @@ computePathways <- function(
     resultSchema = NULL,
     tempEmulationSchema = NULL,
     includeTreatments = "startDate",
-    periodPriorToIndex = 0,
+    indexDateOffset = 0,
     minEraDuration = 0,
     splitEventCohorts = NULL,
     splitTime = NULL,
@@ -150,6 +166,17 @@ computePathways <- function(
   andromeda$metadata <- andromeda$metadata %>%
     dplyr::collect() %>%
     dplyr::mutate(execution_end_date = as.character(Sys.Date()))
+
+  attrCounts <- fetchAttritionCounts(andromeda, "treatmentHistory")
+  appendAttrition(
+    toAdd = data.frame(
+      number_records = attrCounts$nRecords,
+      number_subject = attrCounts$nSubjects,
+      reason_id = 9,
+      reason = sprintf("treatment construction done")
+    ),
+    andromeda = andromeda
+  )
   return(andromeda)
 }
 
@@ -187,12 +214,12 @@ validateComputePathways <- function() {
   )
   
   checkmate::assertNumeric(
-    args$periodPriorToIndex,
+    args$indexDateOffset,
     len = 1,
     finite = TRUE,
     null.ok = FALSE,
     add = assertCol,
-    .var.name = "periodPriorToIndex"
+    .var.name = "indexDateOffset"
   )
   
   checkmate::assertNumeric(
@@ -286,19 +313,24 @@ validateComputePathways <- function() {
     add = assertCol,
     .var.name = "cohorts"
   )
-  
+
   checkmate::assertSubset(
     x = names(args$cohorts),
     choices = c("cohortId", "cohortName", "type"),
     add = assertCol,
     .var.name = "cohorts"
   )
-  
+
+  types <- args$cohorts$type
+  if (!"target" %in% types) {
+    stop("No 'target' cohort specified in `cohorts`.")
+  }
+
   checkmate::assertSubset(
     x = args$cohorts$type,
     choices = c("event", "target", "exit"),
     add = assertCol,
-    .var.name = "cohorts"
+    .var.name = "cohorts$type"
   )
   
   checkmate::assertCharacter(
@@ -355,7 +387,7 @@ checkCohortTable = function(andromeda) {
   cohortTableHead <- andromeda[["cohortTable"]] %>%
     head() %>%
     dplyr::collect()
-  
+
   assertions <- checkmate::makeAssertCollection()
   checkmate::assertIntegerish(cohortTableHead$cohort_definition_id, add = assertions)
   checkmate::assertIntegerish(cohortTableHead$subject_id, add = assertions)

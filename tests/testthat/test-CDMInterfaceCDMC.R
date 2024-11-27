@@ -85,7 +85,7 @@ test_that("Method: fetchCohortTable", {
   
   res <- andromeda$cohortTable
 
-  expect_identical(ncol(res), 6L)
+  expect_identical(ncol(res), 7L)
   expect_identical(res %>% collect() %>% nrow(), 3L)
 
   # Empty
@@ -103,6 +103,6 @@ test_that("Method: fetchCohortTable", {
   
   res <- andromeda$cohortTable
   
-  expect_identical(ncol(res), 6L)
+  expect_identical(ncol(res), 7L)
   expect_identical(res %>% collect() %>% nrow(), 0L)
 })
