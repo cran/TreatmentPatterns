@@ -1,3 +1,18 @@
+# TreatmentPatterns 3.0.0
+---------
+* Save parameters from `computePathways()` and `export()`
+* A `TreatmentPatternsResults` (TPR) object is now returned from `export()`
+* Updated output file and column names to be snake_case rather than camelCase
+  * The TPR object houses all the different tables, and has methods for plotting.
+  * Writing CSV-files on `export()` is now optional (`export(outputPath = "some/path/")`)
+  * The TPR object has the following methods: `saveAsCsv()`, `saveAsZip()`, `uploadResultsToDb()`, `load()`, `plotSunburst()`, `plotSankey()`, `plotEventDuration()` 
+  * The TPR object has the following fields:, `attrition`, `metadata`, `treatment_pathways`, `summary_event_duration`, `counts_age`, `counts_sex`, `counts_year`, `cdm_source_info`, `analyses`, `arguments`
+* Added `ResultModelManager` support
+* Multiple `target` cohorts are now supported
+* Allow `target`, `event`, and `exit` cohorts to be in different tables
+* Stratification is now optional `export(stratify = TRUE)`
+* When data is pulled from the database, subjects are assigned a new subject ID. This prevents rounding subject ID's, and unintentional grouping of subjects.
+
 # TreatmentPatterns 2.7.0
 ---------
 * Converted subject_id's to pseudo_subject_id's when pulling in data from the database. Actual subject_id's are stored as `character()`.
@@ -9,7 +24,7 @@
 * Renamed `summaryStatsTherapyDuration.csv` to `summaryEventDuration.csv`.
 * Updated status messaging in the console.
 * Added `attrition.csv` that capture status messaging and time stamps. 
-
+* 
 # TreatmentPatterns 2.6.9
 ---------
 * Disabled tests when required suggested packages are not available.

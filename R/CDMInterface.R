@@ -65,7 +65,7 @@ CDMInterface <- R6::R6Class(
     #' Name of the table in the Andromeda object where the data will be loaded.
     #' @template param_minEraDuration
     #'
-    #' @return (`data.frame`)
+    #' @return (`andromeda`)
     fetchCohortTable = function(cohorts, cohortTableName, andromeda, andromedaTableName, minEraDuration = NULL) {
       switch(
         private$.type,
@@ -73,21 +73,37 @@ CDMInterface <- R6::R6Class(
         DatabaseConnector = private$dbconFetchCohortTable(cohorts, cohortTableName, andromeda, andromedaTableName, minEraDuration)
       )
     },
-    
+
     #' @description
-    #' Fetch metadata from CDM
+    #' Fetch cdm_source from CDM
     #'
     #' @template param_andromeda
     #'
-    #' @return (`invisible(NULL)`)
-    fetchMetadata = function(andromeda) {
+    #' @return (`andromeda`)
+    fetchCdmSource = function(andromeda) {
       switch(
         private$.type,
-        CDMConnector = private$cdmconFetchMetadata(andromeda),
-        DatabaseConnector = private$dbconFetchMetadata(andromeda)
+        CDMConnector = private$cdmconFetchCdmSource(andromeda),
+        DatabaseConnector = private$dbconFetchCdmSource(andromeda)
       )
     },
-    
+
+    #' @description
+    #' Fetch meta data from CDM
+    #'
+    #' @template param_andromeda
+    #'
+    #' @return (`andromeda`)
+    fetchMetadata = function(andromeda) {
+      andromeda$metadata <- data.frame(
+        execution_start = as.numeric(Sys.time()),
+        package_version = as.character(utils::packageVersion("TreatmentPatterns")),
+        r_version = base::version$version.string,
+        platform = base::version$platform
+      )
+      return(andromeda)
+    },
+
     #' @description
     #' Destroys instance
     #' 
@@ -127,10 +143,10 @@ CDMInterface <- R6::R6Class(
       appendAttrition(
         toAdd = data.frame(
           number_records = sum(n),
-          number_subject = length(n),
+          number_subjects = length(n),
           reason_id = 1,
           reason = sprintf("Qualifying records for cohort definitions: %s", paste(cohortIds, collapse = ", ")),
-          time = as.numeric(Sys.time())
+          time_stamp = as.numeric(Sys.time())
         ),
         andromeda = andromeda
       )
@@ -141,43 +157,89 @@ CDMInterface <- R6::R6Class(
     # cohortTableName (`character(1)`)
     dbconFetchCohortTable = function(cohorts, cohortTableName, andromeda, andromedaTableName, minEraDuration) {
       targetCohortId <- getCohortIds(cohorts, "target")
-      n <- DatabaseConnector::renderTranslateQuerySql(
-        connection = private$.connection,
-        sql = "
+
+      n <- lapply(cohortTableName, function(cohortTable) {
+        DatabaseConnector::renderTranslateQuerySql(
+          connection = private$.connection,
+          sql = "
         SELECT COUNT(*)
         FROM @resultSchema.@cohortTable
         WHERE cohort_definition_id IN (@cohortIds)
         GROUP BY subject_id;",
-        resultSchema = private$.resultSchema,
-        cohortTable = cohortTableName,
-        cohortIds = cohorts$cohortId
-      ) |>
-        unlist() |>
-        as.numeric()
-      
+          resultSchema = private$.resultSchema,
+          cohortTable = cohortTable,
+          cohortIds = cohorts$cohortId
+        ) |>
+          unlist() |>
+          as.numeric()
+      }) |>
+        unlist()
+
       private$dbAppendAttrition(n, andromeda, sort(cohorts$cohortId))
 
       # Select relevant data
-      sql <- SqlRender::loadRenderTranslateSql(
-        sqlFilename = "selectData.sql",
-        packageName = "TreatmentPatterns",
-        dbms = private$.connection@dbms,
+      sql <- lapply(cohortTableName, function(tableName) {
+        SqlRender::loadRenderTranslateSql(
+          sqlFilename = "selectData.sql",
+          packageName = "TreatmentPatterns",
+          dbms = private$.connection@dbms,
+          tempEmulationSchema = private$.tempEmulationSchema,
+          resultSchema = private$.resultSchema,
+          cdmSchema = private$.cdmSchema,
+          cohortTable = tableName,
+          cohortIds = cohorts$cohortId,
+          minEraDuration = minEraDuration
+        )
+      })
+
+      renderedSql <- paste(sql, collapse = "\nUNION ALL\n")
+
+      DatabaseConnector::renderTranslateExecuteSql(
+        connection = private$.connection,
+        oracleTempSchema = private$.tempEmulationSchema,
+        sql = sprintf(
+          "DROP TABLE IF EXISTS #tp_dbc_cohort_table;
+          
+          SELECT * FROM (
+            %s
+          ) INTO #tp_dbc_cohort_table;",
+          renderedSql
+        ),
+        tempEmulationSchema = private$.tempEmulationSchema
+      )
+
+      DatabaseConnector::renderTranslateQuerySqlToAndromeda(
+        connection = private$.connection,
+        andromeda = andromeda,
+        andromedaTableName = andromedaTableName,
         tempEmulationSchema = private$.tempEmulationSchema,
-        resultSchema = private$.resultSchema,
-        cdmSchema = private$.cdmSchema,
-        cohortTable = cohortTableName,
-        cohortIds = cohorts$cohortId,
-        minEraDuration = minEraDuration,
+        sql = "
+        SELECT 
+          #tp_dbc_cohort_table.cohort_definition_id,
+          #tp_dbc_cohort_table.subject_id,
+          #tp_dbc_cohort_table.cohort_start_date,
+          #tp_dbc_cohort_table.cohort_end_date,
+          #tp_dbc_cohort_table.age,
+          #tp_dbc_cohort_table.sex,
+          #tp_dbc_cohort_table.subject_id_origin
+        FROM #tp_dbc_cohort_table
+        INNER JOIN (
+          SELECT #tp_dbc_cohort_table.subject_id
+          FROM #tp_dbc_cohort_table
+          WHERE #tp_dbc_cohort_table.cohort_definition_id IN (@targetCohortId)
+        ) AS cross_sec
+        ON cross_sec.subject_id = #tp_dbc_cohort_table.subject_id",
         targetCohortId = targetCohortId
       )
-      
-      DatabaseConnector::querySqlToAndromeda(
-        connection = private$.connection,
-        sql = sql,
-        andromeda = andromeda,
-        andromedaTableName = andromedaTableName
-      )
-      
+
+      andromeda[[andromedaTableName]] <- andromeda[[andromedaTableName]] %>%
+        dplyr::mutate(
+          cohort_start_date = as.integer(.data$cohort_start_date),
+          cohort_end_date = as.integer(.data$cohort_end_date)
+        )
+
+      names(andromeda[[andromedaTableName]]) <- tolower(names(andromeda[[andromedaTableName]]))
+
       n <- andromeda[[andromedaTableName]] %>%
         dplyr::group_by(.data$subject_id) %>% 
         dplyr::summarise(n = dplyr::n()) %>%
@@ -186,26 +248,19 @@ CDMInterface <- R6::R6Class(
       appendAttrition(
         toAdd = data.frame(
           number_records = sum(n),
-          number_subject = length(n),
+          number_subjects = length(n),
           reason_id = 2,
           reason = sprintf("Removing records < minEraDuration (%s)", minEraDuration),
-          time = as.numeric(Sys.time())
+          time_stamp = as.numeric(Sys.time())
         ),
         andromeda = andromeda
       )
       return(andromeda)
     },
 
-    dbconFetchMetadata = function(andromeda) {
+    dbconFetchCdmSource = function(andromeda) {
       renderedSql <- SqlRender::render(
-        sql = "
-        SELECT
-          cdm_source_name,
-          cdm_source_abbreviation,
-          cdm_release_date,
-          vocabulary_version
-        FROM @cdmSchema.cdm_source
-      ;",
+        sql = "SELECT * FROM @cdmSchema.cdm_source;",
         cdmSchema = private$.cdmSchema
       )
 
@@ -214,17 +269,13 @@ CDMInterface <- R6::R6Class(
         targetDialect = private$.connection@dbms
       )
 
-      andromeda$metadata <- DatabaseConnector::querySql(
+      DatabaseConnector::querySqlToAndromeda(
         connection = private$.connection,
         sql = translatedSql,
-        snakeCaseToCamelCase = TRUE) %>%
-        dplyr::mutate(
-          executionStartDate = as.character(Sys.Date()),
-          packageVersion = as.character(utils::packageVersion("TreatmentPatterns")),
-          rVersion = base::version$version.string,
-          platform = base::version$platform
-        )
-      
+        andromeda = andromeda,
+        andromedaTableName = "cdm_source_info"
+      )
+      names(andromeda$cdm_source_info) <- tolower(names(andromeda$cdm_source_info))
       return(andromeda)
     },
     
@@ -239,70 +290,95 @@ CDMInterface <- R6::R6Class(
         dplyr::select("cohortId") %>%
         dplyr::pull()
 
-      n <- private$.cdm[[cohortTableName]] %>%
-        dplyr::group_by(.data$subject_id) %>% 
-        dplyr::summarise(n = dplyr::n()) %>%
-        dplyr::pull()
+      n <- sapply(cohortTableName, function(tableName) {
+        private$.cdm[[tableName]] %>%
+          dplyr::group_by(.data$subject_id) %>% 
+          dplyr::summarise(n = dplyr::n()) %>%
+          dplyr::pull()
+      }) |> unlist()
+
+      if (length(n) == 0) {
+        n <- 0
+      }
 
       private$dbAppendAttrition(n, andromeda, sort(cohorts$cohortId))
 
       cohortIds <- cohorts$cohortId
-      andromeda[[andromedaTableName]] <- private$.cdm[[cohortTableName]] %>%
-        dplyr::group_by(.data$subject_id) %>%
-        dplyr::mutate(
-          subject_id_origin = .data$subject_id
-        ) %>%
-        dplyr::ungroup() %>%
-        mutate(r = dplyr::row_number()) %>%
-        dplyr::group_by(.data$subject_id_origin) %>%
-        dplyr::mutate(
-          subject_id = min(.data$r, na.rm = TRUE)
-        ) %>%
-        dplyr::select(-"r") %>%
-        dplyr::ungroup() %>%
-        dplyr::filter(.data$cohort_definition_id %in% cohortIds) %>%
-        dplyr::filter(!!CDMConnector::datediff("cohort_start_date", "cohort_end_date") >= minEraDuration) %>%
+
+      for (tableName in cohortTableName) {
+        tbl <- private$.cdm[[tableName]] %>%
+          dplyr::group_by(.data$subject_id) %>%
+          dplyr::mutate(
+            subject_id_origin = .data$subject_id
+          ) %>%
+          dplyr::ungroup() %>%
+          mutate(r = dplyr::row_number()) %>%
+          dplyr::group_by(.data$subject_id_origin) %>%
+          dplyr::mutate(
+            subject_id = min(.data$r, na.rm = TRUE)
+          ) %>%
+          dplyr::select(-"r") %>%
+          dplyr::ungroup() %>%
+          dplyr::filter(.data$cohort_definition_id %in% cohortIds) %>%
+          dplyr::filter(!!CDMConnector::datediff("cohort_start_date", "cohort_end_date", interval = "day") >= minEraDuration) %>%
+          dplyr::group_by(.data$subject_id) %>%
+          dplyr::ungroup() %>%
+          dplyr::inner_join(
+            private$.cdm$person,
+            by = dplyr::join_by(subject_id_origin == person_id)
+          ) %>%
+          dplyr::inner_join(
+            private$.cdm$concept,
+            by = dplyr::join_by(gender_concept_id == concept_id)) %>%
+          dplyr::mutate(
+            date_of_birth = as.Date(paste0(as.integer(year_of_birth), "-01-01"))) %>%
+          dplyr::mutate(
+            age = !!CDMConnector::datediff("date_of_birth", "cohort_start_date", interval = "year")) %>%
+          dplyr::mutate(
+            subject_id_origin = as.character(subject_id_origin)
+          ) %>%
+          dplyr::rename(sex = "concept_name") %>%
+          dplyr::select(
+            "cohort_definition_id",
+            "subject_id",
+            "subject_id_origin",
+            "cohort_start_date",
+            "cohort_end_date",
+            "age",
+            "sex"
+          )
+
+        if (is.null(andromeda[[andromedaTableName]])) {
+          andromeda[[andromedaTableName]] <- tbl
+        } else {
+          andromeda$tbl_temp <- tbl
+          andromeda[[andromedaTableName]] <- andromeda[[andromedaTableName]] %>%
+            dplyr::union_all(andromeda$tbl_temp)
+          andromeda$tbl_temp <- NULL
+        }
+      }
+
+      andromeda[[andromedaTableName]] <- andromeda[[andromedaTableName]] %>%
         dplyr::group_by(.data$subject_id) %>%
         dplyr::filter(any(.data$cohort_definition_id %in% targetCohortIds, na.rm = TRUE)) %>%
         dplyr::ungroup() %>%
-        dplyr::inner_join(
-          private$.cdm$person,
-          by = dplyr::join_by(subject_id_origin == person_id)
-        ) %>%
-        dplyr::inner_join(
-          private$.cdm$concept,
-          by = dplyr::join_by(gender_concept_id == concept_id)) %>%
         dplyr::mutate(
-          date_of_birth = as.Date(paste0(as.integer(year_of_birth), "-01-01"))) %>%
-        dplyr::mutate(
-          age = !!CDMConnector::datediff("date_of_birth", "cohort_start_date", interval = "year")) %>%
-        dplyr::mutate(
-          subject_id_origin = as.character(subject_id_origin)
-        ) %>%
-        dplyr::rename(sex = "concept_name") %>%
-        dplyr::select(
-          "cohort_definition_id",
-          "subject_id",
-          "subject_id_origin",
-          "cohort_start_date",
-          "cohort_end_date",
-          "age",
-          "sex"
-        ) %>%
-        dplyr::ungroup()
-      
+          cohort_start_date = as.integer(.data$cohort_start_date),
+          cohort_end_date = as.integer(.data$cohort_end_date)
+        )
+
       n <- andromeda[[andromedaTableName]] %>%
         dplyr::group_by(.data$subject_id) %>% 
         dplyr::summarise(n = dplyr::n()) %>%
         dplyr::pull()
-      
+
       appendAttrition(
         toAdd = data.frame(
           number_records = sum(n),
-          number_subject = length(n),
+          number_subjects = length(n),
           reason_id = 2,
           reason = sprintf("Removing records < minEraDuration (%s)", minEraDuration),
-          time = as.numeric(Sys.time())
+          time_stamp = as.numeric(Sys.time())
         ),
         andromeda = andromeda
       )
@@ -310,22 +386,10 @@ CDMInterface <- R6::R6Class(
     },
     
     # andromeda (`Andromeda::andromeda()`)
-    cdmconFetchMetadata = function(andromeda) {
-      andromeda$metadata <- private$.cdm$cdm_source %>%
-        dplyr::select(
-          "cdm_source_name",
-          "cdm_source_abbreviation",
-          "cdm_release_date",
-          "vocabulary_version"
-        ) %>%
-        dplyr::collect() %>%
-        SqlRender::snakeCaseToCamelCaseNames() %>%
-        dplyr::mutate(
-          executionStartDate = as.character(Sys.Date()),
-          packageVersion = as.character(utils::packageVersion("TreatmentPatterns")),
-          rVersion = base::version$version.string,
-          platform = base::version$platform
-        )
+    cdmconFetchCdmSource = function(andromeda) {
+      cdmSource <- private$.cdm$cdm_source %>%
+        dplyr::collect()
+      andromeda$cdm_source_info <- cdmSource
       return(andromeda)
     }
   ),

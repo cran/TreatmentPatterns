@@ -28,6 +28,8 @@
 #' @import shiny
 #' @import shinydashboard
 #' @import ggplot2
+#' @importFrom jsonlite fromJSON toJSON
+#' @importFrom dbplyr window_order
 #' @importFrom networkD3 sankeyNetwork
 #' @importFrom htmlwidgets JS
 #' @importFrom stats sd median quantile
@@ -40,13 +42,19 @@ utils::globalVariables(
   c(
     "x",
     "y",
+    "targetCohortId",
+    "cohortId",
     "rowNumber",
+    "pathway",
     "path",
     "personId",
     "freq",
-    "Q1",
-    "Q2",
-    "eventName",
+    "duration_q1",
+    "duration_q2",
+    "duration_min",
+    "duration_max",
+    "duration_median",
+    "event_name",
     "subject_id_origin"
   )
 )

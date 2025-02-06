@@ -5,6 +5,7 @@ library(dplyr)
 test_that("A", {
   skip_if_not(ableToRun()$CDMC)
   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  skip_on_cran()
   
   cohorts <- data.frame(
     cohortId = c(1, 2, 3),
@@ -35,20 +36,10 @@ test_that("A", {
     filterTreatments = "All",
     maxPathLength = 5
   )
+
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
   
-  tempDir <- tempdir()
-  TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1)
-  
-  treatmentPaths <- read.csv(file.path(tempDir, "treatmentPathways.csv"))
-  
-  path <- treatmentPaths %>%
-    dplyr::filter(
-      .data$age == "all",
-      .data$sex == "all",
-      .data$indexYear == "all") %>%
-    dplyr::pull(.data$path)
-  
-  expect_identical(path, "A")
+  expect_identical(result$treatment_pathways$pathway, "A")
   
   DBI::dbDisconnect(con)
 })
@@ -56,6 +47,7 @@ test_that("A", {
 test_that("A-B", {
   skip_if_not(ableToRun()$CDMC)
   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  skip_on_cran()
   
   cohorts <- data.frame(
     cohortId = c(1, 2, 3),
@@ -87,20 +79,10 @@ test_that("A-B", {
     filterTreatments = "All",
     maxPathLength = 5
   )
+
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
   
-  tempDir <- tempdir()
-  TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1)
-  
-  treatmentPaths <- read.csv(file.path(tempDir, "treatmentPathways.csv"))
-  
-  path <- treatmentPaths %>%
-    dplyr::filter(
-      .data$age == "all",
-      .data$sex == "all",
-      .data$indexYear == "all") %>%
-    dplyr::pull(.data$path)
-  
-  expect_identical(path, "A-B")
+  expect_identical(result$treatment_pathways$pathway, "A-B")
   
   DBI::dbDisconnect(con)
 })
@@ -109,6 +91,7 @@ test_that("A-B", {
 test_that("A-B-C", {
   skip_if_not(ableToRun()$CDMC)
   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  skip_on_cran()
   
   cohorts <- data.frame(
     cohortId = c(1, 2, 3, 4),
@@ -141,27 +124,18 @@ test_that("A-B-C", {
     filterTreatments = "All",
     maxPathLength = 5
   )
-  
-  tempDir <- tempdir()
-  TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1)
-  
-  treatmentPaths <- read.csv(file.path(tempDir, "treatmentPathways.csv"))
-  
-  path <- treatmentPaths %>%
-    dplyr::filter(
-      .data$age == "all",
-      .data$sex == "all",
-      .data$indexYear == "all") %>%
-    dplyr::pull(.data$path)
-  
-  expect_identical(path, "A-B-C")
-  
+
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
+
+  expect_identical(result$treatment_pathways$pathway, "A-B-C")
+
   DBI::dbDisconnect(con)
 })
 
 test_that("A-B+C", {
   skip_if_not(ableToRun()$CDMC)
   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  skip_on_cran()
   
   cohorts <- data.frame(
     cohortId = c(1, 2, 3, 4),
@@ -194,27 +168,18 @@ test_that("A-B+C", {
     filterTreatments = "All",
     maxPathLength = 5
   )
-  
-  tempDir <- tempdir()
-  TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1)
-  
-  treatmentPaths <- read.csv(file.path(tempDir, "treatmentPathways.csv"))
-  
-  path <- treatmentPaths %>%
-    dplyr::filter(
-      .data$age == "all",
-      .data$sex == "all",
-      .data$indexYear == "all") %>%
-    dplyr::pull(.data$path)
-  
-  expect_identical(path, "A-B+C")
-  
+
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
+
+  expect_identical(result$treatment_pathways$pathway, "A-B+C")
+
   DBI::dbDisconnect(con)
 })
 
 test_that("A+B-C", {
   skip_if_not(ableToRun()$CDMC)
   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  skip_on_cran()
   
   cohorts <- data.frame(
     cohortId = c(1, 2, 3, 4),
@@ -247,26 +212,17 @@ test_that("A+B-C", {
     filterTreatments = "All",
     maxPathLength = 5
   )
-  
-  tempDir <- tempdir()
-  TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1)
-  
-  treatmentPaths <- read.csv(file.path(tempDir, "treatmentPathways.csv"))
-  
-  path <- treatmentPaths %>%
-    dplyr::filter(
-      .data$age == "all",
-      .data$sex == "all",
-      .data$indexYear == "all") %>%
-    dplyr::pull(.data$path)
-  
-  expect_identical(path, "A+B-C")
-  
+
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
+
+  expect_identical(result$treatment_pathways$pathway, "A+B-C")
+
   DBI::dbDisconnect(con)
 })
 
 test_that("A-A+B", {
   skip_if_not(ableToRun()$CDMC)
+  skip_on_cran()
   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
   
   cohorts <- data.frame(
@@ -300,20 +256,10 @@ test_that("A-A+B", {
     filterTreatments = "All",
     maxPathLength = 5
   )
-  
-  tempDir <- tempdir()
-  TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1)
-  
-  treatmentPaths <- read.csv(file.path(tempDir, "treatmentPathways.csv"))
-  
-  path <- treatmentPaths %>%
-    dplyr::filter(
-      .data$age == "all",
-      .data$sex == "all",
-      .data$indexYear == "all") %>%
-    dplyr::pull(.data$path)
+
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
     
-  expect_identical(path, "A-A+B")
+  expect_identical(result$treatment_pathways$pathway, "A-A+B")
   
   DBI::dbDisconnect(con)
 })
@@ -321,6 +267,7 @@ test_that("A-A+B", {
 test_that("A-B-A-B", {
   skip_if_not(ableToRun()$CDMC)
   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  skip_on_cran()
   
   cohorts <- data.frame(
     cohortId = c(1, 2, 3),
@@ -354,20 +301,10 @@ test_that("A-B-A-B", {
     filterTreatments = "All",
     maxPathLength = 5
   )
-  
-  tempDir <- tempdir()
-  TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1)
-  
-  treatmentPaths <- read.csv(file.path(tempDir, "treatmentPathways.csv"))
-  
-  path <- treatmentPaths %>%
-    dplyr::filter(
-      .data$age == "all",
-      .data$sex == "all",
-      .data$indexYear == "all") %>%
-    dplyr::pull(.data$path)
-  
-  expect_identical(path, "A-B-A-B")
+
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
+
+  expect_identical(result$treatment_pathways$pathway, "A-B-A-B")
   
   DBI::dbDisconnect(con)
 })
@@ -375,6 +312,7 @@ test_that("A-B-A-B", {
 test_that("A-B-A", {
   skip_if_not(ableToRun()$CDMC)
   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  skip_on_cran()
   
   cohorts <- data.frame(
     cohortId = c(1, 2, 3),
@@ -407,20 +345,10 @@ test_that("A-B-A", {
     filterTreatments = "All",
     maxPathLength = 5
   )
+
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
   
-  tempDir <- tempdir()
-  TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1)
-  
-  treatmentPaths <- read.csv(file.path(tempDir, "treatmentPathways.csv"))
-  
-  path <- treatmentPaths %>%
-    dplyr::filter(
-      .data$age == "all",
-      .data$sex == "all",
-      .data$indexYear == "all") %>%
-    dplyr::pull(.data$path)
-  
-  expect_identical(path, "A-B-A")
+  expect_identical(result$treatment_pathways$pathway, "A-B-A")
   
   DBI::dbDisconnect(con)
 })
@@ -428,6 +356,7 @@ test_that("A-B-A", {
 test_that("A-B-B, collapse to A-B", {
   skip_if_not(ableToRun()$CDMC)
   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  skip_on_cran()
   
   cohorts <- data.frame(
     cohortId = c(1, 2, 3),
@@ -460,20 +389,10 @@ test_that("A-B-B, collapse to A-B", {
     filterTreatments = "All",
     maxPathLength = 5
   )
+
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
   
-  tempDir <- tempdir()
-  TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1)
-  
-  treatmentPaths <- read.csv(file.path(tempDir, "treatmentPathways.csv"))
-  
-  path <- treatmentPaths %>%
-    dplyr::filter(
-      .data$age == "all",
-      .data$sex == "all",
-      .data$indexYear == "all") %>%
-    dplyr::pull(.data$path)
-  
-  expect_identical(path, "A-B")
+  expect_identical(result$treatment_pathways$pathway, "A-B")
   
   DBI::dbDisconnect(con)
 })
@@ -481,6 +400,7 @@ test_that("A-B-B, collapse to A-B", {
 test_that("A-B-B", {
   skip_if_not(ableToRun()$CDMC)
   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  skip_on_cran()
   
   cohorts <- data.frame(
     cohortId = c(1, 2, 3),
@@ -513,27 +433,18 @@ test_that("A-B-B", {
     filterTreatments = "All",
     maxPathLength = 5
   )
-  
-  tempDir <- tempdir()
-  TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1)
-  
-  treatmentPaths <- read.csv(file.path(tempDir, "treatmentPathways.csv"))
-  
-  path <- treatmentPaths %>%
-    dplyr::filter(
-      .data$age == "all",
-      .data$sex == "all",
-      .data$indexYear == "all") %>%
-    dplyr::pull(.data$path)
-  
-  expect_identical(path, "A-B-B")
-  
+
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
+
+  expect_identical(result$treatment_pathways$pathway, "A-B-B")
+
   DBI::dbDisconnect(con)
 })
 
 test_that("A+B-A", {
   skip_if_not(ableToRun()$CDMC)
   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  skip_on_cran()
   
   cohorts <- data.frame(
     cohortId = c(1, 2, 3),
@@ -566,27 +477,18 @@ test_that("A+B-A", {
     filterTreatments = "All",
     maxPathLength = 5
   )
-  
-  tempDir <- tempdir()
-  TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1)
-  
-  treatmentPaths <- read.csv(file.path(tempDir, "treatmentPathways.csv"))
-  
-  path <- treatmentPaths %>%
-    dplyr::filter(
-      .data$age == "all",
-      .data$sex == "all",
-      .data$indexYear == "all") %>%
-    dplyr::pull(.data$path)
-  
-  expect_identical(path, "A+B-A")
-  
+
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
+
+  expect_identical(result$treatment_pathways$pathway, "A+B-A")
+
   DBI::dbDisconnect(con)
 })
 
 test_that("A-A-B", {
   skip_if_not(ableToRun()$CDMC)
   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  skip_on_cran()
   
   cohorts <- data.frame(
     cohortId = c(1, 2, 3),
@@ -619,27 +521,18 @@ test_that("A-A-B", {
     filterTreatments = "All",
     maxPathLength = 5
   )
-  
-  tempDir <- tempdir()
-  TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1)
-  
-  treatmentPaths <- read.csv(file.path(tempDir, "treatmentPathways.csv"))
-  
-  path <- treatmentPaths %>%
-    dplyr::filter(
-      .data$age == "all",
-      .data$sex == "all",
-      .data$indexYear == "all") %>%
-    dplyr::pull(.data$path)
-  
-  expect_identical(path, "A-A-B")
-  
+
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
+
+  expect_identical(result$treatment_pathways$pathway, "A-A-B")
+
   DBI::dbDisconnect(con)
 })
 
 test_that("A-A-B, collapse to A-B", {
   skip_if_not(ableToRun()$CDMC)
   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  skip_on_cran()
   
   cohorts <- data.frame(
     cohortId = c(1, 2, 3),
@@ -672,27 +565,18 @@ test_that("A-A-B, collapse to A-B", {
     filterTreatments = "All",
     maxPathLength = 5
   )
-  
-  tempDir <- tempdir()
-  TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1)
-  
-  treatmentPaths <- read.csv(file.path(tempDir, "treatmentPathways.csv"))
-  
-  path <- treatmentPaths %>%
-    dplyr::filter(
-      .data$age == "all",
-      .data$sex == "all",
-      .data$indexYear == "all") %>%
-    dplyr::pull(.data$path)
-  
-  expect_identical(path, "A-B")
-  
+
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
+
+  expect_identical(result$treatment_pathways$pathway, "A-B")
+
   DBI::dbDisconnect(con)
 })
 
 test_that("A+B-A+B, collapse to A+B", {
   skip_if_not(ableToRun()$CDMC)
   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  skip_on_cran()
   
   cohorts <- data.frame(
     cohortId = c(1, 2, 3),
@@ -726,27 +610,18 @@ test_that("A+B-A+B, collapse to A+B", {
     filterTreatments = "All",
     maxPathLength = 5
   )
-  
-  tempDir <- tempdir()
-  TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1)
-  
-  treatmentPaths <- read.csv(file.path(tempDir, "treatmentPathways.csv"))
-  
-  path <- treatmentPaths %>%
-    dplyr::filter(
-      .data$age == "all",
-      .data$sex == "all",
-      .data$indexYear == "all") %>%
-    dplyr::pull(.data$path)
-  
-  expect_identical(path, "A+B")
-  
+
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
+
+  expect_identical(result$treatment_pathways$pathway, "A+B")
+
   DBI::dbDisconnect(con)
 })
 
 test_that("A+B-A+B", {
   skip_if_not(ableToRun()$CDMC)
   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  skip_on_cran()
   
   cohorts <- data.frame(
     cohortId = c(1, 2, 3),
@@ -781,19 +656,9 @@ test_that("A+B-A+B", {
     maxPathLength = 5
   )
   
-  tempDir <- tempdir()
-  TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1)
-  
-  treatmentPaths <- read.csv(file.path(tempDir, "treatmentPathways.csv"))
-  
-  path <- treatmentPaths %>%
-    dplyr::filter(
-      .data$age == "all",
-      .data$sex == "all",
-      .data$indexYear == "all") %>%
-    dplyr::pull(.data$path)
-  
-  expect_identical(path, "A+B-A+B")
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
+
+  expect_identical(result$treatment_pathways$pathway, "A+B-A+B")
   
   DBI::dbDisconnect(con)
 })
@@ -801,6 +666,7 @@ test_that("A+B-A+B", {
 test_that("A-A+B-B", {
   skip_if_not(ableToRun()$CDMC)
   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  skip_on_cran()
   
   cohorts <- data.frame(
     cohortId = c(1, 2, 3),
@@ -832,27 +698,18 @@ test_that("A-A+B-B", {
     filterTreatments = "All",
     maxPathLength = 5
   )
-  
-  tempDir <- tempdir()
-  TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1)
-  
-  treatmentPaths <- read.csv(file.path(tempDir, "treatmentPathways.csv"))
-  
-  path <- treatmentPaths %>%
-    dplyr::filter(
-      .data$age == "all",
-      .data$sex == "all",
-      .data$indexYear == "all") %>%
-    dplyr::pull(.data$path)
-  
-  expect_identical(path, "A-A+B-B")
-  
+
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
+
+  expect_identical(result$treatment_pathways$pathway, "A-A+B-B")
+
   DBI::dbDisconnect(con)
 })
 
 test_that("A-A-C-A+B+C-C", {
   skip_if_not(ableToRun()$CDMC)
   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  skip_on_cran()
   
   cohorts <- data.frame(
     cohortId = c(1, 2, 3, 4),
@@ -885,20 +742,10 @@ test_that("A-A-C-A+B+C-C", {
     filterTreatments = "All",
     maxPathLength = 5
   )
-  
-  tempDir <- tempdir()
-  TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1)
-  
-  treatmentPaths <- read.csv(file.path(tempDir, "treatmentPathways.csv"))
-  
-  path <- treatmentPaths %>%
-    dplyr::filter(
-      .data$age == "all",
-      .data$sex == "all",
-      .data$indexYear == "all") %>%
-    dplyr::pull(.data$path)
-  
-  expect_identical(path, "A+C-A+B+C-A+C")
+
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
+
+  expect_identical(result$treatment_pathways$pathway, "A+C-A+B+C-A+C")
   
   DBI::dbDisconnect(con)
 })
@@ -906,13 +753,14 @@ test_that("A-A-C-A+B+C-C", {
 test_that("A-A+B+C-A+C-C", {
   skip_if_not(ableToRun()$CDMC)
   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
-  
+  skip_on_cran()
+
   cohorts <- data.frame(
     cohortId = c(1, 2, 3, 4),
     cohortName = c("X", "A", "B", "C"),
     type = c("target", "event", "event", "event")
   )
-  
+
   cohort_table <- dplyr::tribble(
     ~cohort_definition_id, ~subject_id, ~cohort_start_date,    ~cohort_end_date,
     1,                     5,           as.Date("2014-01-01"), as.Date("2015-01-01"),
@@ -920,11 +768,11 @@ test_that("A-A+B+C-A+C-C", {
     3,                     5,           as.Date("2014-01-10"), as.Date("2014-01-20"),
     4,                     5,           as.Date("2014-01-10"), as.Date("2014-03-01")
   )
-  
+
   copy_to(con, cohort_table, overwrite = TRUE)
-  
+
   cdm <- cdmFromCon(con, cdmSchema = "main", writeSchema = "main", cohortTables = "cohort_table")
-  
+
   andromeda <- TreatmentPatterns::computePathways(
     cohorts = cohorts,
     cohortTableName = "cohort_table",
@@ -938,34 +786,25 @@ test_that("A-A+B+C-A+C-C", {
     filterTreatments = "All",
     maxPathLength = 5
   )
-  
-  tempDir <- tempdir()
-  export(andromeda, tempDir, minCellCount = 1)
-  
-  treatmentPaths <- read.csv(file.path(tempDir, "treatmentPathways.csv"))
-  
-  path <- treatmentPaths %>%
-    dplyr::filter(
-      .data$age == "all",
-      .data$sex == "all",
-      .data$indexYear == "all") %>%
-    dplyr::pull(.data$path)
-  
-  expect_identical(path, "A-A+B+C-A+C-C")
-  
+
+  result <- export(andromeda, minCellCount = 1)
+
+  expect_identical(result$treatment_pathways$pathway, "A-A+B+C-A+C-C")
+
   DBI::dbDisconnect(con)
 })
 
 test_that("A-A+C-C-B+C-C", {
   skip_if_not(ableToRun()$CDMC)
   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
-  
+  skip_on_cran()
+
   cohorts <- data.frame(
     cohortId = c(1, 2, 3, 4),
     cohortName = c("X", "A", "B", "C"),
     type = c("target", "event", "event", "event")
   )
-  
+
   cohort_table <- dplyr::tribble(
     ~cohort_definition_id, ~subject_id, ~cohort_start_date,    ~cohort_end_date,
     1,                     5,           as.Date("2014-01-01"), as.Date("2015-01-15"),
@@ -974,11 +813,11 @@ test_that("A-A+C-C-B+C-C", {
     4,                     5,           as.Date("2014-01-09"), as.Date("2014-01-18"),
     4,                     5,           as.Date("2014-03-09"), as.Date("2014-03-30")
   )
-  
+
   copy_to(con, cohort_table, overwrite = TRUE)
-  
+
   cdm <- cdmFromCon(con, cdmSchema = "main", writeSchema = "main", cohortTables = "cohort_table")
-  
+
   andromeda <- TreatmentPatterns::computePathways(
     cohorts = cohorts,
     cohortTableName = "cohort_table",
@@ -992,27 +831,18 @@ test_that("A-A+C-C-B+C-C", {
     filterTreatments = "All",
     maxPathLength = 5
   )
-  
-  tempDir <- tempdir()
-  TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1)
-  
-  treatmentPaths <- read.csv(file.path(tempDir, "treatmentPathways.csv"))
-  
-  path <- treatmentPaths %>%
-    dplyr::filter(
-      .data$age == "all",
-      .data$sex == "all",
-      .data$indexYear == "all") %>%
-    dplyr::pull(.data$path)
-  
-  expect_identical(path, "A-A+C-C-B+C-C")
-  
+
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
+
+  expect_identical(result$treatment_pathways$pathway, "A-A+C-C-B+C-C")
+
   DBI::dbDisconnect(con)
 })
 
 test_that("start event == start target", {
   skip_if_not(ableToRun()$CDMC)
   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  skip_on_cran()
   
   cohorts <- data.frame(
     cohortId = c(1, 2),
@@ -1043,20 +873,10 @@ test_that("start event == start target", {
     filterTreatments = "First",
     maxPathLength = 5
   )
-  
-  tempDir <- tempdir()
-  TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1)
-  
-  treatmentPaths <- read.csv(file.path(tempDir, "treatmentPathways.csv"))
-  
-  path <- treatmentPaths %>%
-    dplyr::filter(
-      .data$age == "all",
-      .data$sex == "all",
-      .data$indexYear == "all") %>%
-    dplyr::pull(.data$path)
-  
-  expect_identical(path, "A")
+
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
+
+  expect_identical(result$treatment_pathways$pathway, "A")
   
   DBI::dbDisconnect(con)
 })
@@ -1064,6 +884,7 @@ test_that("start event == start target", {
 test_that("end event == end target", {
   skip_if_not(ableToRun()$CDMC)
   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  skip_on_cran()
   
   cohorts <- data.frame(
     cohortId = c(1, 2),
@@ -1094,20 +915,10 @@ test_that("end event == end target", {
     filterTreatments = "First",
     maxPathLength = 5
   )
+
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
   
-  tempDir <- tempdir()
-  TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1)
-  
-  treatmentPaths <- read.csv(file.path(tempDir, "treatmentPathways.csv"))
-  
-  path <- treatmentPaths %>%
-    dplyr::filter(
-      .data$age == "all",
-      .data$sex == "all",
-      .data$indexYear == "all") %>%
-    dplyr::pull(.data$path)
-  
-  expect_identical(path, "A")
+  expect_identical(result$treatment_pathways$pathway, "A")
   
   DBI::dbDisconnect(con)
 })
@@ -1115,6 +926,7 @@ test_that("end event == end target", {
 test_that("start-end event == start-end target", {
   skip_if_not(ableToRun()$CDMC)
   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  skip_on_cran()
   
   cohorts <- data.frame(
     cohortId = c(1, 2),
@@ -1145,20 +957,10 @@ test_that("start-end event == start-end target", {
     filterTreatments = "First",
     maxPathLength = 5
   )
+
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
   
-  tempDir <- tempdir()
-  TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1)
-  
-  treatmentPaths <- read.csv(file.path(tempDir, "treatmentPathways.csv"))
-  
-  path <- treatmentPaths %>%
-    dplyr::filter(
-      .data$age == "all",
-      .data$sex == "all",
-      .data$indexYear == "all") %>%
-    dplyr::pull(.data$path)
-  
-  expect_identical(path, "A")
+  expect_identical(result$treatment_pathways$pathway, "A")
   
   DBI::dbDisconnect(con)
 })
@@ -1166,6 +968,7 @@ test_that("start-end event == start-end target", {
 test_that("start event < start target", {
   skip_if_not(ableToRun()$CDMC)
   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  skip_on_cran()
 
   cohorts <- data.frame(
     cohortId = c(1, 2),
@@ -1197,40 +1000,40 @@ test_that("start event < start target", {
     maxPathLength = 5
   )
 
-  tempDir <- tempdir()
   expect_message(
-    TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1),
+    TreatmentPatterns::export(andromeda, minCellCount = 1),
     "Treatment History table is empty. Nothing to export.")
 
   DBI::dbDisconnect(con)
 })
 
-test_that("start event < start target, periodPrior = 60", {
+test_that("start event < start target, periodPrior = -60", {
   skip_if_not(ableToRun()$CDMC)
   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
-  
+  skip_on_cran()
+
   cohorts <- data.frame(
     cohortId = c(1, 2),
     cohortName = c("X", "A"),
     type = c("target", "event")
   )
-  
+
   cohort_table <- dplyr::tribble(
     ~cohort_definition_id, ~subject_id, ~cohort_start_date,    ~cohort_end_date,
     1,                     5,           as.Date("2014-10-10"), as.Date("2015-08-01"),
     2,                     5,           as.Date("2014-09-10"), as.Date("2015-08-01")
   )
-  
+
   copy_to(con, cohort_table, overwrite = TRUE)
-  
+
   cdm <- cdmFromCon(con, cdmSchema = "main", writeSchema = "main", cohortTables = "cohort_table")
-  
+
   andromeda <- TreatmentPatterns::computePathways(
     cohorts = cohorts,
     cohortTableName = "cohort_table",
     cdm = cdm,
     includeTreatments = "startDate",
-    indexDateOffset = 60,
+    indexDateOffset = -60,
     minEraDuration = 0,
     eraCollapseSize = 30,
     combinationWindow = 30,
@@ -1238,27 +1041,18 @@ test_that("start event < start target, periodPrior = 60", {
     filterTreatments = "First",
     maxPathLength = 5
   )
-  
-  tempDir <- tempdir()
-  TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1)
-  
-  treatmentPaths <- read.csv(file.path(tempDir, "treatmentPathways.csv"))
-  
-  path <- treatmentPaths %>%
-    dplyr::filter(
-      .data$age == "all",
-      .data$sex == "all",
-      .data$indexYear == "all") %>%
-    dplyr::pull(.data$path)
-  
-  expect_identical(path, "A")
-  
+
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
+
+  expect_identical(result$treatment_pathways$pathway, "A")
+
   DBI::dbDisconnect(con)
 })
 
 test_that("start event > end target", {
   skip_if_not(ableToRun()$CDMC)
   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  skip_on_cran()
   
   cohorts <- data.frame(
     cohortId = c(1, 2),
@@ -1289,18 +1083,19 @@ test_that("start event > end target", {
     filterTreatments = "First",
     maxPathLength = 5
   )
-  
-  tempDir <- tempdir()
+
   expect_message(
-    TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1),
-    "Treatment History table is empty. Nothing to export.")
-  
+    TreatmentPatterns::export(andromeda, minCellCount = 1),
+    "Treatment History table is empty. Nothing to export."
+  )
+
   DBI::dbDisconnect(con)
 })
 
 test_that("collapse A-B-B-B to A-A+B-B", {
   skip_if_not(ableToRun()$CDMC)
   con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  skip_on_cran()
   
   cohorts <- data.frame(
     cohortId = c(1, 2, 3),
@@ -1335,20 +1130,188 @@ test_that("collapse A-B-B-B to A-A+B-B", {
     filterTreatments = "All",
     maxPathLength = 5
   )
+
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
+
+  expect_identical(result$treatment_pathways$pathway, "A-A+B-B")
   
-  tempDir <- tempdir()
-  TreatmentPatterns::export(andromeda, tempDir, minCellCount = 1)
+  DBI::dbDisconnect(con)
+})
+
+test_that("collapse A-B-B-B to A-B", {
+  skip_if_not(ableToRun()$CDMC)
+  con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  skip_on_cran()
   
-  treatmentPaths <- read.csv(file.path(tempDir, "treatmentPathways.csv"))
+  cohorts <- data.frame(
+    cohortId = c(1, 2, 3),
+    cohortName = c("X", "A", "B"),
+    type = c("target", "event", "event")
+  )
   
-  path <- treatmentPaths %>%
-    dplyr::filter(
-      .data$age == "all",
-      .data$sex == "all",
-      .data$indexYear == "all") %>%
-    dplyr::pull(.data$path)
+  cohort_table <- dplyr::tribble(
+    ~cohort_definition_id, ~subject_id, ~cohort_start_date,    ~cohort_end_date,
+    1,                     5,           as.Date("2014-01-01"), as.Date("2015-12-31"),
+    2,                     5,           as.Date("2014-01-01"), as.Date("2014-02-01"),
+    3,                     5,           as.Date("2014-02-03"), as.Date("2014-03-01"),
+    3,                     5,           as.Date("2014-03-03"), as.Date("2014-04-01"),
+    3,                     5,           as.Date("2014-04-03"), as.Date("2014-05-01")
+  )
   
-  expect_identical(path, "A-A+B-B")
+  copy_to(con, cohort_table, overwrite = TRUE)
   
+  cdm <- cdmFromCon(con, cdmSchema = "main", writeSchema = "main", cohortTables = "cohort_table")
+  
+  andromeda <- TreatmentPatterns::computePathways(
+    cohorts = cohorts,
+    cohortTableName = 'cohort_table',
+    cdm = cdm,
+    tempEmulationSchema = NULL,
+    includeTreatments = "startDate",
+    indexDateOffset = 0,
+    minEraDuration = 14,
+    eraCollapseSize = 5,
+    filterTreatments = "All",
+    maxPathLength = 5
+  )
+
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
+
+  expect_identical(result$treatment_pathways$pathway, "A-B")
+
+  DBI::dbDisconnect(con)
+})
+
+test_that("collapse A-A-B-B to A-B", {
+  skip_if_not(ableToRun()$CDMC)
+  con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  skip_on_cran()
+  
+  cohorts <- data.frame(
+    cohortId = c(1, 2, 3),
+    cohortName = c("X", "A", "B"),
+    type = c("target", "event", "event")
+  )
+  
+  cohort_table <- dplyr::tribble(
+    ~cohort_definition_id, ~subject_id, ~cohort_start_date,    ~cohort_end_date,
+    1,                     5,           as.Date("2014-01-01"), as.Date("2015-12-31"),
+    2,                     5,           as.Date("2014-01-01"), as.Date("2014-02-01"),
+    2,                     5,           as.Date("2014-02-03"), as.Date("2014-03-01"),
+    3,                     5,           as.Date("2014-03-03"), as.Date("2014-04-01"),
+    3,                     5,           as.Date("2014-04-03"), as.Date("2014-05-01")
+  )
+  
+  copy_to(con, cohort_table, overwrite = TRUE)
+  
+  cdm <- cdmFromCon(con, cdmSchema = "main", writeSchema = "main", cohortTables = "cohort_table")
+  
+  andromeda <- TreatmentPatterns::computePathways(
+    cohorts = cohorts,
+    cohortTableName = 'cohort_table',
+    cdm = cdm,
+    tempEmulationSchema = NULL,
+    includeTreatments = "startDate",
+    indexDateOffset = 0,
+    minEraDuration = 14,
+    eraCollapseSize = 5,
+    filterTreatments = "All",
+    maxPathLength = 5
+  )
+
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
+
+  expect_identical(result$treatment_pathways$pathway, "A-B")
+  
+  DBI::dbDisconnect(con)
+})
+
+test_that("collapse A-A-B-B to A-B 2", {
+  skip_if_not(ableToRun()$CDMC)
+  con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  skip_on_cran()
+  
+  cohorts <- data.frame(
+    cohortId = c(1, 2, 3),
+    cohortName = c("X", "A", "B"),
+    type = c("target", "event", "event")
+  )
+  
+  cohort_table <- dplyr::tribble(
+    ~cohort_definition_id, ~subject_id, ~cohort_start_date,    ~cohort_end_date,
+    1,                     5,           as.Date("2014-01-01"), as.Date("2015-12-31"),
+    2,                     5,           as.Date("2014-02-03"), as.Date("2014-03-01"),
+    3,                     5,           as.Date("2014-03-03"), as.Date("2014-04-01"),
+    2,                     5,           as.Date("2014-01-01"), as.Date("2014-02-01"),
+    3,                     5,           as.Date("2014-04-03"), as.Date("2014-05-01")
+  )
+
+  copy_to(con, cohort_table, overwrite = TRUE)
+  
+  cdm <- cdmFromCon(con, cdmSchema = "main", writeSchema = "main", cohortTables = "cohort_table")
+  
+  andromeda <- TreatmentPatterns::computePathways(
+    cohorts = cohorts,
+    cohortTableName = 'cohort_table',
+    cdm = cdm,
+    tempEmulationSchema = NULL,
+    includeTreatments = "startDate",
+    indexDateOffset = 0,
+    minEraDuration = 14,
+    eraCollapseSize = 5,
+    filterTreatments = "All",
+    maxPathLength = 5
+  )
+
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
+
+  expect_identical(result$treatment_pathways$pathway, "A-B")
+
+  DBI::dbDisconnect(con)
+})
+
+test_that("collapse A-A-B-B to A+B 2", {
+  skip_if_not(ableToRun()$CDMC)
+  con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomia_dir())
+  skip_on_cran()
+
+  cohorts <- data.frame(
+    cohortId = c(1, 2, 3),
+    cohortName = c("X", "A", "B"),
+    type = c("target", "event", "event")
+  )
+
+  cohort_table <- dplyr::tribble(
+    ~cohort_definition_id, ~subject_id, ~cohort_start_date,    ~cohort_end_date,
+    1,                     5,           as.Date("2014-01-01"), as.Date("2015-12-31"),
+    2,                     5,           as.Date("2014-02-01"), as.Date("2014-03-01"),
+    3,                     5,           as.Date("2014-02-05"), as.Date("2014-03-03"),
+    2,                     5,           as.Date("2014-03-05"), as.Date("2014-04-01"),
+    3,                     5,           as.Date("2014-03-05"), as.Date("2014-04-07")
+  )
+
+  copy_to(con, cohort_table, overwrite = TRUE)
+
+  cdm <- cdmFromCon(con, cdmSchema = "main", writeSchema = "main", cohortTables = "cohort_table")
+
+  andromeda <- TreatmentPatterns::computePathways(
+    cohorts = cohorts,
+    cohortTableName = 'cohort_table',
+    cdm = cdm,
+    tempEmulationSchema = NULL,
+    includeTreatments = "startDate",
+    indexDateOffset = 0,
+    minEraDuration = 14,
+    combinationWindow = 14,
+    minPostCombinationDuration = 14,
+    eraCollapseSize = 5,
+    filterTreatments = "All",
+    maxPathLength = 5
+  )
+
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
+
+  expect_identical(result$treatment_pathways$pathway, "A+B")
+
   DBI::dbDisconnect(con)
 })
