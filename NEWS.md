@@ -1,3 +1,10 @@
+# TreatmentPatterns 3.0.1
+---------
+* Deprecated shiny app
+* Removed shiny-related dependencies
+* Added ggplot2 version of sunburst plot
+* Fixed failing examples
+
 # TreatmentPatterns 3.0.0
 ---------
 * Save parameters from `computePathways()` and `export()`

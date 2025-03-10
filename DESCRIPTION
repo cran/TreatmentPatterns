@@ -2,7 +2,7 @@ Package: TreatmentPatterns
 Type: Package
 Title: Analyzes Real-World Treatment Patterns of a Study Population of
         Interest
-Version: 3.0.0
+Version: 3.0.1
 Authors@R: 
     c(person("Aniek", "Markus", , role = c("aut"), comment = c(ORCID = "0000-0001-5779-4794")),
       person("Maarten", "van Kessel", email = "m.l.vankessel@erasmusmc.nl", role = c("cre"), comment = c(ORCID = "0009-0006-8832-6030")))
@@ -17,8 +17,7 @@ BugReports: https://github.com/darwin-eu/TreatmentPatterns/issues
 Language: en-US
 Depends: R (>= 4.2)
 Imports: checkmate, dplyr, stringr, utils, stats, Andromeda, tidyr, R6,
-        sunburstR, networkD3, htmlwidgets, shiny, shinydashboard,
-        ggplot2, dbplyr, jsonlite
+        sunburstR, networkD3, htmlwidgets, ggplot2, dbplyr, jsonlite
 Suggests: knitr, rmarkdown, tibble, testthat (>= 3.0.0), usethis,
         Eunomia, CDMConnector, DatabaseConnector (>= 6.0.0), SqlRender,
         CohortGenerator, ResultModelManager, webshot2, CirceR, duckdb,
@@ -29,16 +28,15 @@ RoxygenNote: 7.3.2
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Config/testthat/parallel: true
-Collate: 'CDMInterface.R' 'ShinyModule.R' 'CharacterizationPlots.R'
-        'InputHandler.R' 'InteractivePlots.R' 'SankeyDiagram.R'
-        'ShinyApp.R' 'SunburstPlot.R' 'TreatmentPatterns-package.R'
+Collate: 'CDMInterface.R' 'TreatmentPatterns-package.R'
         'TreatmentPatternsResults.R' 'attrition.R' 'computePathways.R'
         'constructPathways.R' 'createSankeyDiagram.R'
         'createSunburstPlot.R' 'executeTreatmentPatterns.R' 'export.R'
-        'getResultsDataModelSpecification.R' 'plotEventDuration.R'
+        'getResultsDataModelSpecification.R' 'ggSunburst.R'
+        'plotEventDuration.R'
 NeedsCompilation: no
-Packaged: 2025-02-06 13:42:24 UTC; mvankessel
+Packaged: 2025-03-10 15:18:05 UTC; mvankessel
 Author: Aniek Markus [aut] (<https://orcid.org/0000-0001-5779-4794>),
   Maarten van Kessel [cre] (<https://orcid.org/0009-0006-8832-6030>)
 Repository: CRAN
-Date/Publication: 2025-02-06 14:20:05 UTC
+Date/Publication: 2025-03-10 15:40:02 UTC
