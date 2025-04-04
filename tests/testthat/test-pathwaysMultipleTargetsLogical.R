@@ -152,12 +152,14 @@ test_that("Pathways", {
     cohorts = cohorts,
     cohortTableName = "cohort_table",
     cdm = cdm,
-    filterTreatments = "All",
+    includeTreatments = "startDate",
     indexDateOffset = 0,
     minEraDuration = 0,
-    eraCollapseSize = 5,
-    combinationWindow = 1,
-    minPostCombinationDuration = 1
+    eraCollapseSize = 30,
+    combinationWindow = 30,
+    minPostCombinationDuration = 1,
+    filterTreatments = "All",
+    maxPathLength = 5
   )
 
   result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
@@ -181,12 +183,14 @@ test_that("Pathways", {
         cohorts = cohorts,
         cohortTableName = "tbl",
         cdm = cdm,
-        filterTreatments = "All",
+        includeTreatments = "startDate",
         indexDateOffset = 0,
         minEraDuration = 0,
-        eraCollapseSize = 5,
-        combinationWindow = 1,
-        minPostCombinationDuration = 1
+        eraCollapseSize = 30,
+        combinationWindow = 30,
+        minPostCombinationDuration = 1,
+        filterTreatments = "All",
+        maxPathLength = 5
       )
 
       res <- TreatmentPatterns::export(outputEnv, minCellCount = 1)
@@ -198,15 +202,20 @@ test_that("Pathways", {
     pathway <- res$treatment_pathways %>%
       dplyr::pull(.data$pathway)
 
-    result$treatment_pathways %>%
+    nRow <- result$treatment_pathways %>%
       dplyr::filter(
         .data$target_cohort_id == target,
         .data$pathway == !!pathway
       ) %>%
-      nrow() %>%
-      expect_equal(1)
+      nrow()
 
-    cdm <- CDMConnector::dropTable(cdm = cdm, name = "tbl")
+    if (interactive()) {
+      print(sprintf(">> Subject: %s\n  %s : 1", subjectId, nRow))
+    }
+
+    expect_equal(nRow, 1)
+
+    cdm <- CDMConnector::dropSourceTable(cdm = cdm, name = "tbl")
     DBI::dbDisconnect(con)
   }
 })
@@ -245,14 +254,12 @@ test_that("Events within target", {
     cohorts = cohorts,
     cohortTableName = "cohort_table",
     cdm = cdm,
-    includeTreatments = "startDate",
+    filterTreatments = "All",
     indexDateOffset = 0,
     minEraDuration = 0,
-    eraCollapseSize = 30,
-    combinationWindow = 30,
-    minPostCombinationDuration = 30,
-    filterTreatments = "First",
-    maxPathLength = 5
+    eraCollapseSize = 5,
+    combinationWindow = 1,
+    minPostCombinationDuration = 1
   )
 
   result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
@@ -301,7 +308,7 @@ test_that("Events within target", {
       nrow() %>%
       expect_equal(1)
     
-    cdm <- CDMConnector::dropTable(cdm = cdm, name = "tbl")
+    cdm <- CDMConnector::dropSourceTable(cdm = cdm, name = "tbl")
     DBI::dbDisconnect(con)
   }
 })

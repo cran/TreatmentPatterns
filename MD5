@@ -1,12 +1,12 @@
-e8eb848bd837d14009e70ac5e9fae986 *DESCRIPTION
-ce621d2a9fed3513c616a667ad0c7238 *NAMESPACE
-dd538175b15c6014db960356c20a9d52 *NEWS.md
-bddf326124685936cbbf4a1a913b8f82 *R/CDMInterface.R
+be2bdd4700d2787a33a78dcadd7261dc *DESCRIPTION
+2192c0686916f1635bffbe6ee1364929 *NAMESPACE
+f78c044d04cd1992a39354f39e95e393 *NEWS.md
+9fbbcf7c9f96e0ae967db10dddf62c29 *R/CDMInterface.R
 38c02c46912b1bbc474afe45348c27ca *R/TreatmentPatterns-package.R
 6bd76cc4698d3cdc7ad590fd0749b536 *R/TreatmentPatternsResults.R
 397994bfbea8cae5a84f982712e2553d *R/attrition.R
-cb39ed8b6271679097c8089e4a14cc90 *R/computePathways.R
-60938a77fe3dc6846a81a5f04aed8b08 *R/constructPathways.R
+379be292f8d304374207ee5e0bcde7ee *R/computePathways.R
+dc92e76c0f01178afe42c136ba46f518 *R/constructPathways.R
 872667817b1a277510737d63f5c9934a *R/createSankeyDiagram.R
 ee9539fc4c394a78888f25b7e1201e9f *R/createSunburstPlot.R
 d05dd12cfae48d9517d7d6891389f85e *R/executeTreatmentPatterns.R
@@ -14,7 +14,7 @@ d05dd12cfae48d9517d7d6891389f85e *R/executeTreatmentPatterns.R
 186d752d9f6b4eaf094b12f6ae1b8ede *R/getResultsDataModelSpecification.R
 4fb20edd677eeb5f05a5049409086376 *R/ggSunburst.R
 73b2d1cfb6007be01c8b3058c55d6b01 *R/plotEventDuration.R
-c85fa1acfeccc44fb7a546f5e5ac2c7f *README.md
+5ce178842490275f201c6ae27b49255e *README.md
 b54db8794555342c4feee5fe0b1b8f5b *build/partial.rdb
 0e62a060e9aaec0523d40d62f08ae335 *build/vignette.rds
 4849bea7424b4defebfd129d637ccd8f *inst/CITATION
@@ -32,7 +32,7 @@ c0b9d33ca9b8ac95a1632f1925fc45f8 *inst/DummyOutput/treatment_pathways.csv
 0e7894598b47ef7bc40882ac7ba463a5 *inst/WORDLIST
 e2196ccd878de301b5273447bff394a9 *inst/doc/DefiningCohorts.R
 cdd1fde58be58a77daf29e406bf59262 *inst/doc/DefiningCohorts.Rmd
-734cda4c9a1da77355b6660014b191cd *inst/doc/DefiningCohorts.html
+f1377c73c75704bc2fffa1c7b7e2fb56 *inst/doc/DefiningCohorts.html
 cf4bbfce77357eb3c31c7cce972de6a2 *inst/docs/TreatmentPatternsStudy.pdf
 df8bde5722ec3fd47730807d63909ad0 *inst/docs/TreatmentPatterns_1.0.0.pdf
 233fd022b3160f563065523252284beb *inst/docs/package.png
@@ -49,7 +49,7 @@ b30c32ae54131376058485385d017df3 *inst/exampleCohorts/Clavulanate.json
 8fcd0841414bd48158250c527a6f11ca *inst/exampleCohorts/ViralSinusitis.json
 f845892d10fed5a633e33c9494d9cca7 *inst/resultsDataModelSpecifications.csv
 822e3e7b18590cc59b82deb0a2c09d77 *inst/sql/ageRefTable.sql
-c82822bc13c945c3a0d61dfb3f3e3a72 *inst/sql/selectData.sql
+675b6af094a133a1dd93550490c7f2cd *inst/sql/selectData.sql
 ac2c5f182c17a751ada1856c08013609 *man/TreatmentPatterns-package.Rd
 f26624692312a9f9c8429679d02ad21f *man/TreatmentPatternsResults.Rd
 1a405d274be19cf11c8eb86f60020c19 *man/computePathways.Rd
@@ -85,8 +85,8 @@ b0e64109a2766ae57240d269899e1cf4 *tests/testthat/test-computePathways.R
 28c7c3a198f67028c3523010bb82d367 *tests/testthat/test-ggSunburst.R
 44a8dae937b72cf7f88c1baa8a42c5a9 *tests/testthat/test-launchResultsExplorer.R
 7a7d2fb0b11e64766ec8989aed6f9749 *tests/testthat/test-multipleCohortTables.R
-1ff82c02c73cf923345c57cf4d0235a5 *tests/testthat/test-pathwaysLogical.R
-a051c63ffbb8136b55c78b2c695bd9bf *tests/testthat/test-pathwaysMultipleTargetsLogical.R
+b73f7ac57fd649bdd83c9138e882d826 *tests/testthat/test-pathwaysLogical.R
+9b04a077e226c5a2bd635023d881fd18 *tests/testthat/test-pathwaysMultipleTargetsLogical.R
 051b60b66f03d3dc146fdcf14980af1b *tests/testthat/test-plotEventDuration.R
 cdd1fde58be58a77daf29e406bf59262 *vignettes/DefiningCohorts.Rmd
 2809575e3053b826dc286cb5a9e9c847 *vignettes/articles/ComputingTreatmentPathways.Rmd

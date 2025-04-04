@@ -200,9 +200,11 @@ CDMInterface <- R6::R6Class(
         sql = sprintf(
           "DROP TABLE IF EXISTS #tp_dbc_cohort_table;
           
-          SELECT * FROM (
+          SELECT *
+          INTO #tp_dbc_cohort_table
+          FROM (
             %s
-          ) INTO #tp_dbc_cohort_table;",
+          ) a;",
           renderedSql
         ),
         tempEmulationSchema = private$.tempEmulationSchema
@@ -331,7 +333,7 @@ CDMInterface <- R6::R6Class(
             private$.cdm$concept,
             by = dplyr::join_by(gender_concept_id == concept_id)) %>%
           dplyr::mutate(
-            date_of_birth = as.Date(paste0(as.integer(year_of_birth), "-01-01"))) %>%
+            date_of_birth = as.Date(paste0(as.character(year_of_birth), "-01-01"))) %>%
           dplyr::mutate(
             age = !!CDMConnector::datediff("date_of_birth", "cohort_start_date", interval = "year")) %>%
           dplyr::mutate(
@@ -349,7 +351,8 @@ CDMInterface <- R6::R6Class(
           )
 
         if (is.null(andromeda[[andromedaTableName]])) {
-          andromeda[[andromedaTableName]] <- tbl
+          dplyr::copy_to(dest = andromeda, df = tbl, name = andromedaTableName, overwrite = TRUE)
+          # andromeda[[andromedaTableName]] <- tbl
         } else {
           andromeda$tbl_temp <- tbl
           andromeda[[andromedaTableName]] <- andromeda[[andromedaTableName]] %>%

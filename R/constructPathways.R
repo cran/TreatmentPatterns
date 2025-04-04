@@ -353,34 +353,45 @@ doSplitEventCohorts <- function(
 doEraCollapse <- function(andromeda, eraCollapseSize) {
   andromeda$treatmentHistory <- andromeda$treatmentHistory %>%
     dplyr::group_by(.data$eventCohortId, .data$personId) %>%
+    dbplyr::window_order(.data$eventStartDate, .data$eventEndDate) %>%
     dplyr::mutate(
-      prevStart = dplyr::lag(.data$eventStartDate),
-      prevEnd = dplyr::lag(.data$eventEndDate),
-      gap = as.numeric(.data$eventStartDate - .data$prevEnd)
+      nextStart = dplyr::lead(.data$eventStartDate),
+      nextEnd = dplyr::lead(.data$eventEndDate),
+      gap = as.numeric(.data$nextStart - .data$eventEndDate)
     ) %>%
+    dplyr::mutate(row_person = row_number()) %>%
     dplyr::ungroup() %>%
-    dplyr::mutate(row = row_number()) %>%
-    dbplyr::window_order(.data$eventCohortId, .data$eventStartDate, .data$eventEndDate)
+    dplyr::mutate(row = row_number())
 
   rows <- andromeda$treatmentHistory %>%
+    dplyr::group_by(.data$eventCohortId, .data$personId) %>%
+    dbplyr::window_order(.data$eventStartDate, .data$eventEndDate) %>%
     dplyr::filter(.data$gap <= eraCollapseSize) %>%
     dplyr::pull(.data$row)
   
-  for (row in rev(rows)) {
-    endDate <- andromeda$treatmentHistory %>%
-      dplyr::filter(dplyr::row_number() == !!row) %>%
-      dplyr::pull(.data$eventEndDate)
+  for (row in rows) {
+    record <- andromeda$treatmentHistory %>%
+      dplyr::group_by(.data$eventCohortId, .data$personId) %>%
+      dbplyr::window_order(.data$eventStartDate, .data$eventEndDate) %>%
+      dplyr::filter(.data$row == !!row)
     
+    startDate <- record %>% dplyr::pull(.data$eventStartDate)
+    row_person <- record %>% dplyr::pull(.data$row_person)
+
     andromeda$treatmentHistory <- andromeda$treatmentHistory %>%
-      dplyr::mutate(eventEndDate = dplyr::case_when(
-        dplyr::row_number() == !!row - 1 ~ endDate,
-        .default = .data$eventEndDate
-      ))
+      dplyr::group_by(.data$eventCohortId, .data$personId) %>%
+      dbplyr::window_order(.data$eventStartDate, .data$eventEndDate) %>%
+      dplyr::mutate(
+        eventStartDate = dplyr::case_when(
+          .data$row_person == !!row_person + 1 & dplyr::lag(.data$row) == !!row ~ startDate,
+          .default = .data$eventStartDate
+        )
+      )
   }
 
   andromeda$treatmentHistory <- andromeda$treatmentHistory %>%
-    dplyr::filter(!dplyr::row_number() %in% rows) %>%
-    dplyr::select(-"prevStart", -"prevEnd", -"gap", -"row")
+    dplyr::filter(!.data$row %in% rows) %>%
+    dplyr::select(-"nextStart", -"nextEnd", -"gap", -"row", "row_person")
 
   attrCounts <- fetchAttritionCounts(andromeda, "treatmentHistory")
   appendAttrition(

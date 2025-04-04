@@ -457,7 +457,7 @@ test_that("A+B-A", {
     1,                     5,           as.Date("2014-01-01"), as.Date("2015-01-01"),
     2,                     5,           as.Date("2014-01-10"), as.Date("2014-03-10"),
     3,                     5,           as.Date("2014-01-10"), as.Date("2014-03-10"),
-    2,                     5,           as.Date("2014-03-12"), as.Date("2014-05-12")
+    2,                     5,           as.Date("2014-03-20"), as.Date("2014-05-12")
   )
   
   copy_to(con, cohort_table, overwrite = TRUE)
@@ -1108,7 +1108,7 @@ test_that("collapse A-B-B-B to A-A+B-B", {
     1,                     5,           as.Date("2014-01-01"), as.Date("2015-12-31"),
     2,                     5,           as.Date("2014-05-20"), as.Date("2014-08-17"),
     3,                     5,           as.Date("2014-07-08"), as.Date("2014-08-25"),
-    3,                     5,           as.Date("2014-10-19"), as.Date("2015-02-22"),
+    3,                     5,           as.Date("2014-09-19"), as.Date("2015-02-22"),
     3,                     5,           as.Date("2015-02-28"), as.Date("2015-09-26")
   )
   
@@ -1134,7 +1134,7 @@ test_that("collapse A-B-B-B to A-A+B-B", {
   result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
 
   expect_identical(result$treatment_pathways$pathway, "A-A+B-B")
-  
+
   DBI::dbDisconnect(con)
 })
 
@@ -1313,5 +1313,193 @@ test_that("collapse A-A-B-B to A+B 2", {
 
   expect_identical(result$treatment_pathways$pathway, "A+B")
 
+  DBI::dbDisconnect(con)
+})
+
+test_that("collapse: A-A-A-A-A-A-A-A to A", {
+  skip_if_not(ableToRun()$CDMC)
+  con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomiaDir())
+  skip_on_cran()
+  
+  cohorts <- data.frame(
+    cohortId = c(1, 2, 3),
+    cohortName = c("X", "A", "B"),
+    type = c("target", "event", "event")
+  )
+  
+  cohort_table <- dplyr::tribble(
+    ~cohort_definition_id, ~subject_id, ~cohort_start_date,    ~cohort_end_date,
+    1,                     5,           as.Date("2014-01-01"), as.Date("2015-01-01"),
+    2,                     5,           as.Date("2014-01-10"), as.Date("2014-01-10"),
+    2,                     5,           as.Date("2014-01-23"), as.Date("2014-01-24"),
+    2,                     5,           as.Date("2014-01-11"), as.Date("2014-01-12"),
+    2,                     5,           as.Date("2014-01-13"), as.Date("2014-01-14"),
+    2,                     5,           as.Date("2014-01-15"), as.Date("2014-01-16"),
+    2,                     5,           as.Date("2014-01-17"), as.Date("2014-01-18"),
+    2,                     5,           as.Date("2014-01-19"), as.Date("2014-01-20"),
+    2,                     5,           as.Date("2014-05-21"), as.Date("2014-05-22")
+  )
+  
+  copy_to(con, cohort_table, overwrite = TRUE)
+  
+  cdm <- cdmFromCon(con, cdmSchema = "main", writeSchema = "main", cohortTables = "cohort_table")
+  
+  andromeda <- TreatmentPatterns::computePathways(
+    cohorts = cohorts,
+    cohortTableName = "cohort_table",
+    cdm = cdm,
+    includeTreatments = "startDate",
+    indexDateOffset = 0,
+    minEraDuration = 0,
+    eraCollapseSize = 5,
+    filterTreatments = "First",
+    maxPathLength = 5
+  )
+
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
+  
+  expect_identical(result$treatment_pathways$pathway, "A")
+  
+  DBI::dbDisconnect(con)
+})
+
+test_that("collapse: A-A-A-A-A-A-A-A to A-A", {
+  skip_if_not(ableToRun()$CDMC)
+  con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomiaDir())
+  skip_on_cran()
+  
+  cohorts <- data.frame(
+    cohortId = c(1, 2, 3),
+    cohortName = c("X", "A", "B"),
+    type = c("target", "event", "event")
+  )
+  
+  cohort_table <- dplyr::tribble(
+    ~cohort_definition_id, ~subject_id, ~cohort_start_date,    ~cohort_end_date,
+    1,                     5,           as.Date("2014-01-01"), as.Date("2015-01-01"),
+    2,                     5,           as.Date("2014-01-10"), as.Date("2014-01-10"),
+    2,                     5,           as.Date("2014-01-23"), as.Date("2014-01-24"),
+    2,                     5,           as.Date("2014-01-11"), as.Date("2014-01-12"),
+    2,                     5,           as.Date("2014-01-13"), as.Date("2014-01-14"),
+    2,                     5,           as.Date("2014-01-15"), as.Date("2014-01-16"),
+    2,                     5,           as.Date("2014-01-17"), as.Date("2014-01-18"),
+    2,                     5,           as.Date("2014-01-19"), as.Date("2014-01-20"),
+    2,                     5,           as.Date("2014-05-21"), as.Date("2014-05-22")
+  )
+  
+  copy_to(con, cohort_table, overwrite = TRUE)
+  
+  cdm <- cdmFromCon(con, cdmSchema = "main", writeSchema = "main", cohortTables = "cohort_table")
+  
+  andromeda <- TreatmentPatterns::computePathways(
+    cohorts = cohorts,
+    cohortTableName = "cohort_table",
+    cdm = cdm,
+    includeTreatments = "startDate",
+    indexDateOffset = 0,
+    minEraDuration = 0,
+    eraCollapseSize = 5,
+    filterTreatments = "All",
+    maxPathLength = 5
+  )
+  
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
+  
+  expect_identical(result$treatment_pathways$pathway, "A-A")
+  
+  DBI::dbDisconnect(con)
+})
+
+test_that("collapse: A-A-A-A-A-A-A-A to A-A-A-A-A", {
+  skip_if_not(ableToRun()$CDMC)
+  con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomiaDir())
+  skip_on_cran()
+  
+  cohorts <- data.frame(
+    cohortId = c(1, 2, 3),
+    cohortName = c("X", "A", "B"),
+    type = c("target", "event", "event")
+  )
+  
+  cohort_table <- dplyr::tribble(
+    ~cohort_definition_id, ~subject_id, ~cohort_start_date,    ~cohort_end_date,
+    1,                     5,           as.Date("2014-01-01"), as.Date("2015-01-01"),
+    2,                     5,           as.Date("2014-01-10"), as.Date("2014-01-10"),
+    2,                     5,           as.Date("2014-01-23"), as.Date("2014-01-24"),
+    2,                     5,           as.Date("2014-01-11"), as.Date("2014-01-12"),
+    2,                     5,           as.Date("2014-01-13"), as.Date("2014-01-14"),
+    2,                     5,           as.Date("2014-01-15"), as.Date("2014-01-16"),
+    2,                     5,           as.Date("2014-01-17"), as.Date("2014-01-18"),
+    2,                     5,           as.Date("2014-01-19"), as.Date("2014-01-20"),
+    2,                     5,           as.Date("2014-05-21"), as.Date("2014-05-22")
+  )
+  
+  copy_to(con, cohort_table, overwrite = TRUE)
+  
+  cdm <- cdmFromCon(con, cdmSchema = "main", writeSchema = "main", cohortTables = "cohort_table")
+  
+  andromeda <- TreatmentPatterns::computePathways(
+    cohorts = cohorts,
+    cohortTableName = "cohort_table",
+    cdm = cdm,
+    includeTreatments = "startDate",
+    indexDateOffset = 0,
+    minEraDuration = 0,
+    eraCollapseSize = 0,
+    filterTreatments = "All",
+    maxPathLength = 5
+  )
+  
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
+  
+  expect_identical(result$treatment_pathways$pathway, "A-A-A-A-A")
+  
+  DBI::dbDisconnect(con)
+})
+
+test_that("collapse: A-B-B-A-A-A-A-B to A-B-B-A-A", {
+  skip_if_not(ableToRun()$CDMC)
+  skip_on_cran()
+  con <- DBI::dbConnect(duckdb::duckdb(), dbdir = eunomiaDir())
+  
+  cohorts <- data.frame(
+    cohortId = c(1, 2, 3),
+    cohortName = c("X", "A", "B"),
+    type = c("target", "event", "event")
+  )
+  
+  cohort_table <- dplyr::tribble(
+    ~cohort_definition_id, ~subject_id, ~cohort_start_date,    ~cohort_end_date,
+    1,                     5,           as.Date("2014-01-01"), as.Date("2015-01-01"),
+    2,                     5,           as.Date("2014-01-10"), as.Date("2014-01-10"),
+    3,                     5,           as.Date("2014-01-23"), as.Date("2014-01-24"),
+    3,                     5,           as.Date("2014-01-11"), as.Date("2014-01-12"),
+    3,                     5,           as.Date("2014-01-13"), as.Date("2014-01-14"),
+    2,                     5,           as.Date("2014-01-15"), as.Date("2014-01-16"),
+    2,                     5,           as.Date("2014-01-17"), as.Date("2014-01-18"),
+    2,                     5,           as.Date("2014-01-19"), as.Date("2014-01-20"),
+    2,                     5,           as.Date("2014-05-21"), as.Date("2014-05-22")
+  )
+  
+  copy_to(con, cohort_table, overwrite = TRUE)
+  
+  cdm <- cdmFromCon(con, cdmSchema = "main", writeSchema = "main", cohortTables = "cohort_table")
+  
+  andromeda <- TreatmentPatterns::computePathways(
+    cohorts = cohorts,
+    cohortTableName = "cohort_table",
+    cdm = cdm,
+    includeTreatments = "startDate",
+    indexDateOffset = 0,
+    minEraDuration = 0,
+    eraCollapseSize = 0,
+    filterTreatments = "All",
+    maxPathLength = 5
+  )
+  
+  result <- TreatmentPatterns::export(andromeda, minCellCount = 1)
+  
+  expect_identical(result$treatment_pathways$pathway, "A-B-B-A-A")
+  
   DBI::dbDisconnect(con)
 })

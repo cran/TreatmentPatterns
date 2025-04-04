@@ -144,7 +144,7 @@ computePathways <- function(
 
   andromeda <- Andromeda::andromeda()
 
-  argsToSave <- jsonlite::toJSON(args[-grep("cdm|connectionDetails", names(args))])
+  argsToSave <- as.character(jsonlite::toJSON(args[-grep("cdm|connectionDetails", names(args))]))
 
   andromeda$arguments <- data.frame(
     analysis_id = analysisId,
@@ -312,7 +312,7 @@ validateComputePathways <- function() {
   checkmate::assertNumeric(
     x = args$maxPathLength,
     lower = 0,
-    upper = 5,
+    upper = Inf,
     finite = TRUE,
     len = 1,
     null.ok = FALSE,

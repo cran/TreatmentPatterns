@@ -1,3 +1,11 @@
+# TreatmentPatterns 3.0.2
+---------
+* Added unit-testing for `CDMInterface` on Postgres, Redshift, SQL Server, Oracle, BigQuery, Spark, Snowflake
+* Fixed some SQL issues for specific databases
+* Fixed issue where a crash occurred on R 4.2.x, when saving the input arguments.
+* Uncapped pathway length from 5.
+* Fixed edge case on long repeating events to collapse.
+
 # TreatmentPatterns 3.0.1
 ---------
 * Deprecated shiny app
