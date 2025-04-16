@@ -1,3 +1,7 @@
+# TreatmentPatterns 3.0.3
+---------
+* Added compatibility with Andromeda 0.6.7 and 1.0.0
+
 # TreatmentPatterns 3.0.2
 ---------
 * Added unit-testing for `CDMInterface` on Postgres, Redshift, SQL Server, Oracle, BigQuery, Spark, Snowflake
