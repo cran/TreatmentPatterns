@@ -11,7 +11,7 @@
 
 
 
-<title>Defining Cohorts</title>
+<title>Strategus Execution</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -1619,185 +1619,143 @@ display: none;
 
 
 
-<h1 class="title toc-ignore">Defining Cohorts</h1>
+<h1 class="title toc-ignore">Strategus Execution</h1>
 
 </div>
 
 <div id="TOC">
 <ul>
-<li><a href="#atlas" id="toc-atlas">ATLAS</a></li>
-<li><a href="#capr" id="toc-capr">CapR</a></li>
-<li><a href="#cohorts-for-treatmentpatterns" id="toc-cohorts-for-treatmentpatterns">Cohorts for
-<code>TreatmentPatterns</code></a></li>
+<li><a href="#introduction" id="toc-introduction">Introduction</a></li>
+<li><a href="#database-settings" id="toc-database-settings">Database
+settings</a></li>
+<li><a href="#cohortgenerator-module" id="toc-cohortgenerator-module">CohortGenerator Module</a></li>
+<li><a href="#treatmentpatterns-module" id="toc-treatmentpatterns-module">TreatmentPatterns module</a></li>
+<li><a href="#execution" id="toc-execution">Execution</a></li>
 </ul>
 </div>
 
-<div id="atlas" class="section level1">
-<h1>ATLAS</h1>
-<p>The most popular way is to create cohorts is to use <a href="https://atlas-demo.ohdsi.org/">ATLAS</a>.</p>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>This vignette shows to to run a <code>TreatmentPatterns</code>
+analysis using <code>Strategus</code>.</p>
 <blockquote>
-<p>ATLAS is an open source software tool for researchers to conduct
-scientific analyses on standardized observational data converted to the
-OMOP Common Data Model V5.</p>
+<p>The <code>Strategus</code> package is a new approach for coordinating
+and executing analytics using HADES modules. The goal is to have OHDSI
+network sites install Strategus and exchange an analysis specification
+in JSON format to execute a network study. The analysis specification
+will capture all of the design choices that pertain to the methods used
+in a given study. The analysis specification format aims to allow for
+combining different HADES modules together as a pipeline to execute a
+study.</p>
 </blockquote>
-<p><a href="https://github.com/OHDSI/Atlas"><em>GitHub.com/OHDSI/Atlas</em></a></p>
-<p>A cohort definition for Viral Sinusitis may look like this:</p>
-<blockquote>
-<h2 id="cohort-information">Cohort information</h2>
-<h3 id="viral-sinusitis-cohort-parameters">Viral Sinusitis Cohort
-parameters</h3>
-<p>The following text is an export of ATLAS Version 2.12.2. The bold
-parts of the text are parameters set in the cohort definition.</p>
-<h4 id="cohort-entry-events">Cohort Entry Events</h4>
-<p>People with continuous observation of <strong>365</strong> days
-before and <strong>1,095</strong> days after event may enter the cohort
-when observing any of the following:</p>
-<p>drug eras of <strong>‘Viral Sinusistis drugs’</strong>. Limit cohort
-entry events to the <strong>earliest event</strong> per person.</p>
-<h3 id="inclusion-criteria">Inclusion Criteria</h3>
-<p><strong>1. Viral Sinusitis diagnosis</strong> Entry events having at
-least 1 condition occurrence of ‘[MVK] Viral Sinusitis diagnosis’, allow
-events outside &gt;observation period.</p>
-<p><strong>2. Index year</strong> Entry events with the following event
-criteria: starting after December 31, 1949.</p>
-<h4 id="cohort-exit">Cohort Exit</h4>
-<p>The person exits the cohort at the end of <strong>continuous
-observation</strong>.</p>
-<h4 id="cohort-eras">Cohort Eras</h4>
-<p>Entry events will be combined into cohort eras if they are within
-<strong>0</strong> days of each other.</p>
-</blockquote>
-<p>ATLAS allows you to export cohort definitions to <code>SQL</code>,
-<code>JSON</code>, or plain text (like above).</p>
-<p>Cohorts specified in SQL may be run on your database directly with <a href="https://ohdsi.github.io/DatabaseConnector/">DatabaseConnector</a>
-and <a href="https://ohdsi.github.io/SqlRender/">SqlRender</a> to
-generate the cohort table.</p>
-<p>Cohorts specified as JSON may be generated using <a href="https://ohdsi.github.io/CohortGenerator/">CohortGenerator</a> or
-<a href="https://darwin-eu.github.io/CDMConnector/">CDMConnector</a> to
-generate the cohort table.</p>
+<p><em><a href="https://ohdsi.github.io/Strategus/articles/IntroductionToStrategus.html">Introduction
+to Strategus</a></em></p>
 </div>
-<div id="capr" class="section level1">
-<h1>CapR</h1>
-<p><a href="https://ohdsi.github.io/Capr/">CapR</a> is a package that
-allows one to programatically generate cohorts. This is especially
-useful if lots of cohorts need to be created.</p>
-<blockquote>
-<p>The goal of Capr, pronounced ‘kay-pr’ like the edible flower, is to
-provide a language for expressing OHDSI Cohort definitions in R code.
-OHDSI defines a cohort as “a set of persons who satisfy one or more
-inclusion criteria for a duration of time” and provides a standardized
-approach for defining them (Circe-be). Capr exposes the standardized
-approach to cohort building through a programmatic interface in R which
-is particularly helpful when creating a large number of similar cohorts.
-Capr version 2 introduces a new user interface designed for readability
-with the goal that Capr code being a human readable description of a
-cohort while also being executable on an OMOP Common Data Model.</p>
-</blockquote>
-<p>Specifying a cohort for Viral Sinusitis with CapR may look like
-this:</p>
-<pre class="r"><code>library(Capr)
+<div id="database-settings" class="section level2">
+<h2>Database settings</h2>
+<p>First we specify the execution settings, which dictate how to connect
+to the database.</p>
+<pre class="r"><code>library(Strategus)
+library(Eunomia)
+library(CohortGenerator)
+library(CirceR)
+library(TreatmentPatterns)
 
-viralSinusitis &lt;- cs(
-  descendants(40481087),
-  name = &quot;viralSinusitis&quot;,
-  id = &quot;Viral Sinusitis&quot;
-)
+connectionDetails &lt;- Eunomia::getEunomiaConnectionDetails()
 
-viralSinusitisCohort &lt;- cohort(
-  entry = entry(
-    conditionOccurrence(viralSinusitis),
-    primaryCriteriaLimit = &quot;First&quot;
-  ),
-  exit = exit(
-    endStrategy = observationExit()
-  )
-)
+outputFolder &lt;- tempdir()
 
-cohortSet &lt;- list(ViralSinusitis = viralSinusitisCohort)</code></pre>
-<p>The cohortSet may then be generated using <a href="https://ohdsi.github.io/CohortGenerator/">CohortGenerator</a> or
-<a href="https://darwin-eu.github.io/CDMConnector/">CDMConnector</a>.</p>
-</div>
-<div id="cohorts-for-treatmentpatterns" class="section level1">
-<h1>Cohorts for <code>TreatmentPatterns</code></h1>
-<p><code>TreatmentPatterns</code> includes the following dummy cohorts
-that were defined in ATLAS, and are usable with the <a href="https://ohdsi.github.io/Eunomia/">Eunomia</a> package: <em>Viral
-Sinusitis</em>, <em>Acetaminophen</em>, <em>Amoxicillin</em>,
-<em>Aspirin</em>, <em>Clavunate</em>, <em>Doxylamine</em>, <em>Penicilin
-V</em>, and <em>Death</em>.</p>
-<p>These cohorts are of a specific <em>type</em>, meaning they serve a
-different purpose within <code>TreatmentPatterns</code>. The types are:
-<strong>target</strong> (required), <strong>event</strong> (at least
-one), <strong>exit</strong> (optional). <strong>Target</strong> cohorts
-is a cohort of subjects that you are interested in.
-<strong>Event</strong> cohorts are different treatments that may be to
-subjects within your <strong>target</strong> cohort.
-<strong>Exit</strong> cohorts are similar to <strong>event</strong>
-cohorts, but allow you to specify an exiting event, like death.</p>
-<p>In the table below you can see which cohort is of what type.</p>
-<table>
-<thead>
-<tr class="header">
-<th align="left">Cohorts</th>
-<th align="left">Type</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="left">Viral Sinusitis</td>
-<td align="left">target</td>
-</tr>
-<tr class="even">
-<td align="left">Acetaminophen</td>
-<td align="left">event</td>
-</tr>
-<tr class="odd">
-<td align="left">Amoxicillin</td>
-<td align="left">event</td>
-</tr>
-<tr class="even">
-<td align="left">Aspirin</td>
-<td align="left">event</td>
-</tr>
-<tr class="odd">
-<td align="left">Clavunate</td>
-<td align="left">event</td>
-</tr>
-<tr class="even">
-<td align="left">Doxylamine</td>
-<td align="left">event</td>
-</tr>
-<tr class="odd">
-<td align="left">Penicilin V</td>
-<td align="left">event</td>
-</tr>
-<tr class="even">
-<td align="left">Death</td>
-<td align="left">exit</td>
-</tr>
-</tbody>
-</table>
-<p>Given these cohorts and their types we are looking within a
-<strong>target</strong> cohort of subjects diagnosed with <em>Viral
-Sinusitis</em>. We are interested in generating treatment pathways with
-the following <strong>event</strong> cohorts: <em>Acetaminophen</em>,
-<em>Amoxicillin</em>, <em>Aspirin</em>, <em>Clavunate</em>,
-<em>Doxylamine</em>, <em>Penicilin V</em>. If subjects
-<strong>exit</strong> the database by dying, within the bounds of the
-target cohort, tag on <em>Death</em>.</p>
-<p>After installing <code>TreatmentPatterns</code> these cohorts are
-accessible through the following code.</p>
-<pre class="r"><code>list.files(
-  system.file(package = &quot;TreatmentPatterns&quot;, &quot;exampleCohorts&quot;),
-  full.names = TRUE
+executeSettings &lt;- Strategus::createCdmExecutionSettings(
+  workDatabaseSchema = &quot;main&quot;,
+  cdmDatabaseSchema = &quot;main&quot;,
+  cohortTableNames = CohortGenerator::getCohortTableNames(cohortTable = &quot;cohort_table&quot;),
+  workFolder = file.path(outputFolder, &quot;work&quot;),
+  resultsFolder = file.path(outputFolder, &quot;result&quot;),
+  minCellCount = 5
 )</code></pre>
-<pre><code>## [1] &quot;C:/Users/mvankessel/AppData/Local/Temp/Rtmp6P5z3G/Rinst74f44403423d/TreatmentPatterns/exampleCohorts/Acetaminophen.json&quot; 
-## [2] &quot;C:/Users/mvankessel/AppData/Local/Temp/Rtmp6P5z3G/Rinst74f44403423d/TreatmentPatterns/exampleCohorts/Amoxicillin.json&quot;   
-## [3] &quot;C:/Users/mvankessel/AppData/Local/Temp/Rtmp6P5z3G/Rinst74f44403423d/TreatmentPatterns/exampleCohorts/Aspirin.json&quot;       
-## [4] &quot;C:/Users/mvankessel/AppData/Local/Temp/Rtmp6P5z3G/Rinst74f44403423d/TreatmentPatterns/exampleCohorts/Clavulanate.json&quot;   
-## [5] &quot;C:/Users/mvankessel/AppData/Local/Temp/Rtmp6P5z3G/Rinst74f44403423d/TreatmentPatterns/exampleCohorts/Death.json&quot;         
-## [6] &quot;C:/Users/mvankessel/AppData/Local/Temp/Rtmp6P5z3G/Rinst74f44403423d/TreatmentPatterns/exampleCohorts/Doxylamine.json&quot;    
-## [7] &quot;C:/Users/mvankessel/AppData/Local/Temp/Rtmp6P5z3G/Rinst74f44403423d/TreatmentPatterns/exampleCohorts/PenicillinV.json&quot;   
-## [8] &quot;C:/Users/mvankessel/AppData/Local/Temp/Rtmp6P5z3G/Rinst74f44403423d/TreatmentPatterns/exampleCohorts/ViralSinusitis.json&quot;</code></pre>
+</div>
+<div id="cohortgenerator-module" class="section level2">
+<h2>CohortGenerator Module</h2>
+<p>Secondly we need need to tell Strategus which cohorts to generate,
+and where.</p>
+<pre class="r"><code># Read cohort json files provided by TreatmentPatterns
+files &lt;- list.files(
+  path = system.file(package = &quot;TreatmentPatterns&quot;, &quot;exampleCohorts&quot;),
+  full.names = TRUE
+)
+json &lt;- sapply(files, readLines)
+json &lt;- sapply(json, paste, collapse = &quot;&quot;)
+
+# Build SQL from JSON definition
+sql &lt;- sapply(
+  X = json,
+  FUN = CirceR::buildCohortQuery,
+  options = CirceR::createGenerateOptions(generateStats = FALSE)
+)
+
+# Set cohort names
+cohortNames &lt;- sapply(basename(files), function(name) {
+  strtrim(name, nchar(name) - 5)
+})
+
+# Build cohortSet
+cohortSet &lt;- data.frame(
+  cohortId = seq_len(length(json)),
+  cohortName = cohortNames,
+  sql = sql,
+  json = json
+)
+
+# Specify CohortGenerator module
+cgMod &lt;- Strategus::CohortGeneratorModule$new()
+
+# Add `cohortSet` to the shared specifications
+cohortSharedResource &lt;- cgMod$createCohortSharedResourceSpecifications(
+  cohortDefinitionSet = cohortSet
+)
+
+# Create the CohortGenerator specification
+cgSpec &lt;- cgMod$createModuleSpecifications()</code></pre>
+</div>
+<div id="treatmentpatterns-module" class="section level2">
+<h2>TreatmentPatterns module</h2>
+<p>Then we tell Strategus how to execute TreatmentPatterns.</p>
+<pre class="r"><code># Create a cohort &#39;types&#39; table from the cohortSet to indicate whcih cohorts
+# are a &#39;target&#39; and &#39;event&#39; cohorts
+cohorts &lt;- data.frame(
+  cohortId = cohortSet$cohortId,
+  cohortName = cohortSet$cohortName,
+  type = c(rep(&quot;event&quot;, 7), &quot;target&quot;)
+)
+
+# Create the TreatmentPatterns module
+tpMod &lt;- Strategus::TreatmentPatternsModule$new()
+
+# Create the TreatmentPatterns specification
+tpSpec &lt;- tpMod$createModuleSpecifications(
+  cohorts = cohorts,
+  minEraDuration = 30,
+  combinationWindow = 30,
+  minPostCombinationDuration = 30
+  # ...
+)</code></pre>
+</div>
+<div id="execution" class="section level2">
+<h2>Execution</h2>
+<p>Finally we design our analysis and execute it against the
+database.</p>
+<pre class="r"><code># Add specifications to an empty analysis specification
+analysisSpec &lt;- Strategus::createEmptyAnalysisSpecificiations() |&gt;
+  Strategus::addSharedResources(cohortSharedResource) |&gt;
+  Strategus::addCohortGeneratorModuleSpecifications(cgSpec) |&gt;
+  Strategus::addTreatmentPatternsModuleSpecifications(tpSpec)
+
+# Execute the analysis
+Strategus::execute(
+  analysisSpecifications = analysisSpec,
+  executionSettings = executeSettings,
+  connectionDetails = connectionDetails
+)</code></pre>
 </div>
 
 
